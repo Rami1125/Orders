@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טופס הזמנה מתקדם - ח.סבן חומרי בניין</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1d4ed8',
+                        secondary: '#93c5fd',
+                        accent: '#22c55e',
+                        neutral: '#1f2937',
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '12px'
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px rgba(0, 0, 0, 0.08)',
+                        'card': '0 6px 24px rgba(0, 0, 0, 0.1)',
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in',
+                        'led-scroll': 'ledScroll 10s linear infinite',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        ledScroll: {
+                            '0%': { transform: 'translateX(100%)' },
+                            '100%': { transform: 'translateX(-100%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        }
+
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+        }
+
+        .floating-label {
+            position: absolute;
+            pointer-events: none;
+            right: 1rem;
+            top: 0.75rem;
+            transition: all 0.2s ease;
+            color: #6b7280;
+        }
+
+        input:focus ~ .floating-label,
+        input:not(:placeholder-shown) ~ .floating-label,
+        select:focus ~ .floating-label,
+        select:not([value=""]) ~ .floating-label {
+            top: -0.75rem;
+            right: 0.75rem;
+            font-size: 0.75rem;
+            background: white;
+            padding: 0 0.25rem;
+            color: #1d4ed8;
+            font-weight: 500;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #e5e7eb;
+            z-index: 99;
+            top: 100%;
+            right: 0;
+            left: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .autocomplete-items div {
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #f3f4f6;
+        }
+
+        .autocomplete-active {
+            background-color: #1d4ed8 !important;
+            color: white !important;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 420px;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .popup-overlay.active .popup-content {
+            transform: scale(1);
+        }
+
+        .branch-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .branch-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .branch-title {
+            font-weight: 600;
+            color: #1d4ed8;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .branch-hours {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .branch-hours span {
+            color: #6b7280;
+            font-weight: normal;
+        }
+
+        .marketing-button {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            border-radius: 8px;
+            padding: 8px;
+            margin: 6px 0;
+            text-align: center;
+            font-weight: 300;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .marketing-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .color-option {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .color-option.selected {
+            border-color: #1d4ed8;
+            transform: scale(1.1);
+        }
+
+        .tab-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-item.active {
+            color: #1d4ed8 !important;
+            font-weight: 600;
+        }
+
+        .progress-step {
+            font-size: 12px;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active {
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        /* New Chat Button Styles */
+        .chat-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+
+        .chat-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-btn i {
+            font-size: 24px;
+        }
+
+        .chat-container {
+            position: fixed;
+            bottom: 100px;
+            left: 30px;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            display: none;
+        }
+
+        .chat-container.active {
+            transform: translateY(0);
+            opacity: 1;
+            display: block;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .chat-close {
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .chat-messages {
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .bot-message {
+            background: #e5e7eb;
+            margin-right: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .user-message {
+            background: #1d4ed8;
+            color: white;
+            margin-left: auto;
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            resize: none;
+            font-family: 'Rubik', sans-serif;
+            min-height: 50px;
+        }
+
+        .chat-send-btn {
+            background: #1d4ed8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .chat-send-btn:hover {
+            background: #1e40af;
+        }
+
+        /* LED Message Styles */
+        .led-message {
+            background-color: #1f2937;
+            color: #22c55e;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-weight: bold;
+            overflow: hidden;
+            white-space: nowrap;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5) inset;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .led-message span {
+            display: inline-block;
+            animation: ledScroll 10s linear infinite;
+        }
+
+        /* Calendar Styles */
+        .calendar-popup {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .calendar-day:hover {
+            background: #f3f4f6;
+        }
+
+        .calendar-day.selected {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .calendar-nav-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #e5e7eb;
+        }
+
+        /* Color Picker Styles */
+        .color-picker-container {
+            margin-top: 16px;
+        }
+
+        .color-picker-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .color-picker-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .color-picker-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .quantity-selector {
+            margin-top: 16px;
+        }
+
+        .quantity-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Rubik', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+    <!-- Chat Button -->
+    <div id="chatBtn" class="chat-btn">
+        <i class="ri-chat-3-line"></i>
+    </div>
+
+    <!-- Chat Container -->
+    <div id="chatContainer" class="chat-container">
+        <div class="chat-header">
+            <h3>שירות לקוחות - ח.סבן</h3>
+            <div id="chatClose" class="chat-close">
+                <i class="ri-close-line"></i>
+            </div>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        <div class="chat-input-container">
+            <textarea id="chatInput" class="chat-input" placeholder="כתוב הודעה..."></textarea>
+            <button id="chatSendBtn" class="chat-send-btn">שלח</button>
+        </div>
+    </div>
+
+    <!-- Welcome Popup -->
+    <div id="welcomePopup" class="popup-overlay">
+        <div class="popup-content">
+            <i class="ri-building-2-line text-5xl text-primary mb-4 animate-bounce"></i>
+            <div class="led-message mb-4">
+                <span>ברוכים הבאים למערכת ההזמנות של ח.סבן חומרי בניין! ✨ הזמנה מהירה ומאובטחת בלחיצה אחת 🚀</span>
+            </div>
+            <button onclick="closeWelcomePopup()" class="w-full bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">
+                התחל עכשיו
+            </button>
+        </div>
+    </div>
+
+    <!-- Calendar Popup -->
+    <div id="calendarPopup" class="popup-overlay hidden">
+        <div class="calendar-popup">
+            <div class="calendar-header">
+                <h3 class="font-bold">בחר תאריך אספקה</h3>
+                <button id="closeCalendarBtn">&times;</button>
+            </div>
+            <div class="calendar-grid" id="calendarDays">
+                <!-- Calendar days will be generated here -->
+            </div>
+            <div class="calendar-nav">
+                <button id="prevMonthBtn" class="calendar-nav-btn">חודש קודם</button>
+                <span id="currentMonth" class="font-medium"></span>
+                <button id="nextMonthBtn" class="calendar-nav-btn">חודש הבא</button>
+            </div>
+            <button id="confirmDateBtn" class="w-full bg-primary text-white py-2 rounded-button mt-4">אישור</button>
+        </div>
+    </div>
+
+    <!-- Color Customization Popup -->
+    <div id="colorPopup" class="popup-overlay">
+        <div class="popup-content">
+            <h3 class="text-xl font-bold text-primary mb-4">בחירת גוון צבע</h3>
+            <p class="text-gray-600 mb-4">בחר גוון והמוצר יחכה לך בסניף שבחרת:</p>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <div class="color-option selected" style="background-color: #ffffff;" onclick="selectColor(this, 'לבן')"></div>
+                <div class="color-option" style="background-color: #f1f1f1;" onclick="selectColor(this, 'אפור בהיר')"></div>
+                <div class="color-option" style="background-color: #cccccc;" onclick="selectColor(this, 'אפור')"></div>
+                <div class="color-option" style="background-color: #ffebee;" onclick="selectColor(this, 'ורוד בהיר')"></div>
+                <div class="color-option" style="background-color: #fff8e1;" onclick="selectColor(this, 'צהוב בהיר')"></div>
+                <div class="color-option" style="background-color: #e8f5e9;" onclick="selectColor(this, 'ירוק בהיר')"></div>
+                <div class="color-option" style="background-color: #e3f2fd;" onclick="selectColor(this, 'כחול בהיר')"></div>
+                <div class="color-option" style="background-color: #f3e5f5;" onclick="selectColor(this, 'סגול בהיר')"></div>
+            </div>
+            
+            <div class="color-picker-container">
+                <label for="customColor" class="color-picker-label">או הזן גוון מותאם אישית:</label>
+                <input type="text" id="customColor" class="color-picker-input" placeholder="לדוגמה: בז'-כהה, טורקיז, אפרסק">
+                <p class="color-picker-hint">הזן תיאור מילולי של הגוון הרצוי (באנגלית או עברית)</p>
+            </div>
+            
+            <div class="quantity-selector">
+                <label for="colorQuantity" class="color-picker-label">כמות ליטרים:</label>
+                <select id="colorQuantity" class="w-full px-4 py-3 border border-gray-300 rounded-button">
+                    <option value="3 ליטר">3 ליטר</option>
+                    <option value="5 ליטר">5 ליטר</option>
+                    <option value="18 ליטר">18 ליטר</option>
+                    <option value="1 ליטר">1 ליטר (דוגמית)</option>
+                </select>
+            </div>
+            
+            <div class="relative mb-4 mt-4">
+                <select id="colorBranch" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary bg-white">
+                    <option value="התלמיד 6, הוד השרון">סניף התלמיד 6, הוד השרון</option>
+                    <option value="החרש 10, הוד השרון">סניף החרש 10, הוד השרון</option>
+                </select>
+                <label for="colorBranch" class="floating-label">סניף לאיסוף</label>
+            </div>
+            
+            <div class="flex gap-4">
+                <button onclick="submitColorSelection()" class="flex-1 bg-primary text-white py-3 rounded-button hover:bg-blue-700">אישור</button>
+                <button onclick="closeColorPopup()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CRM Popup -->
+    <div id="crmPopup" class="fixed bottom-4 right-4 w-80 bg-white rounded-xl shadow-card z-50 overflow-hidden opacity-0 translate-y-4 transition-all duration-300">
+        <div class="bg-primary text-black p-3 flex justify-between items-center">
+            <span class="font-semibold">ח.סבן - שירות לקוחות</span>
+            <span class="crm-close cursor-pointer text-xl" onclick="closeCrmPopup()">×</span>
+        </div>
+        <div class="p-4 text-sm">
+            <strong>זמינים עבורך!</strong><br>
+            צוות ההזמנות שלנו כאן לכל שאלה או בקשה. צור קשר בכל עת.
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="popup-overlay hidden">
+        <div class="popup-content">
+            <h3 class="text-xl font-bold text-primary mb-4">אישור הזמנה</h3>
+            <p class="text-gray-600 mb-4">האם אתה בטוח שברצונך לשלוח את ההזמנה?</p>
+            <div id="confirmationSummary" class="text-sm text-gray-600 mb-6"></div>
+            <div class="flex gap-4">
+                <button onclick="confirmOrder()" class="flex-1 bg-accent text-black py-3 rounded-button hover:bg-green-600">שלח</button>
+                <button onclick="closeConfirmationModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300">בטל</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Self Pickup Hours Popup -->
+    <div id="pickupHoursPopup" class="popup-overlay">
+        <div class="popup-content">
+            <h3 class="text-xl font-bold text-primary mb-4">שעות איסוף עצמי</h3>
+            <div class="branch-card">
+                <div class="branch-title">סניף התלמיד 6, הוד השרון</div>
+                <div class="branch-hours">שעות איסוף: <span>06:00-16:00</span></div>
+                <div class="branch-phone">טלפון: 09-7602010</div>
+                <div class="branch-address">כתובת: התלמיד 6, הוד השרון</div>
+                <button onclick="navigateToBranch('התלמיד 6, הוד השרון')" class="branch-button bg-primary text-white py-2 rounded-button hover:bg-blue-700">
+                    <i class="ri-map-pin-line"></i> ניווט לסניף
+                </button>
+            </div>
+            <div class="branch-card">
+                <div class="branch-title">סניף החרש 10, הוד השרון</div>
+                <div class="branch-hours">שעות איסוף: <span>06:00-16:00</span></div>
+                <div class="branch-phone">טלפון: 09-7402575</div>
+                <div class="branch-address">כתובת: החרש 10, הוד השרון</div>
+                <button onclick="navigateToBranch('החרש 10, הוד השרון')" class="branch-button bg-primary text-white py-2 rounded-button hover:bg-blue-700">
+                    <i class="ri-map-pin-line"></i> ניווט לסניף
+                </button>
+            </div>
+            <button onclick="closePickupHoursPopup()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300 mt-4">
+                סגור
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-lg mx-auto pb-24 pt-6 px-4">
+        <!-- Header -->
+        <header class="fixed top-0 right-0 left-0 z-50 bg-white bg-opacity-95 backdrop-blur-md shadow-sm px-4 py-3 flex items-center justify-between">
+            <img src="https://i.postimg.cc/cJFsg4Zf/unnamed.jpg" alt="ח.סבן חומרי בניין לוגו" class="h-9 w-auto">
+            <h1 class="text-xl font-bold text-primary">טופס הזמנה חדשה</h1>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="mt-20 mb-6">
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-primary h-2.5 rounded-full transition-all duration-300" style="width: 20%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-sm">
+                <span class="progress-step active">ברוכים הבאים</span>
+                <span class="progress-step">פרטי לקוח</span>
+                <span class="progress-step">פרטי אספקה</span>
+                <span class="progress-step">פריטים</span>
+                <span class="progress-step">סיום</span>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <form id="orderForm" class="space-y-6">
+            <!-- Welcome Section -->
+            <section id="section-welcome" class="glassmorphism p-6 space-y-5 animate-slide-up">
+                <h2 class="text-xl font-bold text-primary flex items-center">
+                    <div class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full mr-2">1</div>
+                    ברוכים הבאים
+                </h2>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                    <p class="font-medium" id="personalWelcome">ברוכים הבאים! אנא מלאו את פרטי ההזמנה</p>
+                    <p class="text-sm mt-2">גוונו את הצבעים שלכם והזמינו בקלות!</p>
+                    <button onclick="openColorPopup()" class="marketing-button mt-3">
+                        <i class="ri-palette-line"></i> בחר גוון צבע
+                    </button>
+                </div>
+                <button type="button" onclick="showSection(5)" class="w-full bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">
+                    מידע על מחלקת ההזמנות
+                </button>
+                <button type="button" onclick="showSection(6)" class="w-full bg-blue-600 text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">
+                    שעות פעילות
+                </button>
+                <a href="https://sites.google.com/view/sb94/home/%D7%AA%D7%9B%D7%A0%D7%95%D7%9F-%D7%91%D7%A0%D7%99%D7%94" target="_blank" class="marketing-button">
+                    <i class="ri-leaf-line"></i> בנייה ירוקה - חכמה וידידותית לסביבה
+                </a>
+                <a href="https://sites.google.com/view/sb94/%D7%9E%D7%97%D7%A9%D7%91%D7%95%D7%9F-%D7%9B%D7%9E%D7%95%D7%AA" target="_blank" class="marketing-button">
+                    <i class="ri-calculator-line"></i> מחשבוני חומרי בניין
+                </a>
+                <button type="button" id="nextToCustomer" class="w-full bg-accent text-white py-3 rounded-button hover:bg-green-300 transition duration-200">
+                    התחל הזמנה חדשה
+                </button>
+            </section>
+
+            <!-- Customer Details Section -->
+            <section id="section-customer" class="glassmorphism p-6 space-y-5 hidden animate-slide-up">
+                <h2 class="text-xl font-bold text-primary flex items-center">
+                    <div class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full mr-2">2</div>
+                    פרטי לקוח
+                </h2>
+                <div class="relative">
+                    <input type="text" id="customerName" name="customerName" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" required placeholder=" " oninput="updateWelcomeMessage()">
+                    <label for="customerName" class="floating-label">שם לקוח *</label>
+                </div>
+                <div class="relative">
+                    <input type="tel" id="customerPhone" name="customerPhone" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" required placeholder=" " pattern="[0-9]{10}">
+                    <label for="customerPhone" class="floating-label">טלפון *</label>
+                    <small class="text-gray-500 block mt-1">לדוגמה: 0501234567</small>
+                </div>
+                <div class="flex gap-4">
+                    <button type="button" id="backToWelcome" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300 transition duration-300">חזרה</button>
+                    <button type="button" id="nextToDelivery" class="flex-1 bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">המשך</button>
+                </div>
+            </section>
+
+            <!-- Delivery Details Section -->
+            <section id="section-delivery" class="glassmorphism p-6 space-y-5 hidden animate-slide-up">
+                <h2 class="text-xl font-bold text-primary flex items-center">
+                    <div class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full mr-2">3</div>
+                    פרטי אספקה
+                </h2>
+                <div class="relative">
+                    <select id="deliveryType" name="deliveryType" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary bg-white" onchange="checkSelfPickup()">
+                        <option value="" disabled selected>בחר סוג אספקה</option>
+                        <option value="פריקה ידנית">פריקה ידנית 👐</option>
+                        <option value="פריקת מנוף 10 מטר">פריקת מנוף 10 מטר 🏗️</option>
+                        <option value="פריקת מנוף 15 מטר">פריקת מנוף 15 מטר 🏗️</option>
+                        <option value="עבודת מנוף עד שעה">עבודת מנוף עד שעה ⏰</option>
+                        <option value="עבודת מנוף עד שעתיים">עבודת מנוף עד שעתיים ⏰</option>
+                        <option value="הצבת מכולה">הצבת מכולה 📦</option>
+                        <option value="החלפת מכולה">החלפת מכולה 🔄</option>
+                        <option value="הוצאת מכולה">הוצאת מכולה 🚚</option>
+                        <option value="איסוף עצמי">איסוף עצמי 🚗</option>
+                    </select>
+                    <label for="deliveryType" class="floating-label">סוג אספקה *</label>
+                </div>
+                <div class="relative">
+                    <input type="text" id="deliveryDate" name="deliveryDate" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" " readonly>
+                    <label for="deliveryDate" class="floating-label">תאריך אספקה</label>
+                </div>
+                <div class="relative">
+                    <select id="deliveryTime" name="deliveryTime" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary bg-white">
+                        <option value="" disabled selected>בחר שעת אספקה</option>
+                        <option value="06:00">06:00</option>
+                        <option value="06:30">06:30</option>
+                        <option value="07:00">07:00</option>
+                        <option value="07:30">07:30</option>
+                        <option value="08:00">08:00</option>
+                        <option value="08:30">08:30</option>
+                        <option value="09:00">09:00</option>
+                        <option value="09:30">09:30</option>
+                        <option value="10:00">10:00</option>
+                        <option value="10:30">10:30</option>
+                        <option value="11:00">11:00</option>
+                        <option value="11:30">11:30</option>
+                        <option value="12:00">12:00</option>
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">13:00</option>
+                        <option value="13:30">13:30</option>
+                        <option value="14:00">14:00</option>
+                        <option value="14:30">14:30</option>
+                        <option value="15:00">15:00</option>
+                        <option value="15:30">15:30</option>
+                        <option value="16:00">16:00</option>
+                    </select>
+                    <label for="deliveryTime" class="floating-label">שעת אספקה</label>
+                </div>
+                <div class="relative autocomplete-container">
+                    <input type="text" id="city" name="city" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" ">
+                    <label for="city" class="floating-label">עיר</label>
+                    <div id="cityAutocomplete" class="autocomplete-items hidden"></div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="relative flex-1">
+                        <input type="text" id="street" name="street" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" ">
+                        <label for="street" class="floating-label">רחוב</label>
+                    </div>
+                    <div class="relative w-1/3">
+                        <input type="text" id="streetNumber" name="streetNumber" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" ">
+                        <label for="streetNumber" class="floating-label">מספר</label>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input type="text" id="contactPerson" name="contactPerson" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" ">
+                    <label for="contactPerson" class="floating-label">איש קשר</label>
+                </div>
+                <div class="relative">
+                    <input type="tel" id="contactPhone" name="contactPhone" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" " pattern="[0-9]{10}">
+                    <label for="contactPhone" class="floating-label">טלפון איש קשר</label>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <p class="text-sm mb-2">שליחת מיקום מדויק? לחץ כאן!</p>
+                    <a href="https://wa.me/972508860896?text=המיקום+שלי+להזמנה:" class="flex items-center justify-center bg-accent text-white py-3 rounded-button hover:bg-green-600 transition duration-300">
+                        <i class="ri-map-pin-line ri-lg ml-2"></i>
+                        שתף מיקום בווצאפ
+                    </a>
+                </div>
+                <div class="flex gap-4">
+                    <button type="button" id="backToCustomer" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300 transition duration-300">חזרה</button>
+                    <button type="button" id="nextToItems" class="flex-1 bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">המשך</button>
+                </div>
+            </section>
+
+            <!-- Items Section -->
+            <section id="section-items" class="glassmorphism p-6 space-y-5 hidden animate-slide-up">
+                <h2 class="text-xl font-bold text-primary flex items-center">
+                    <div class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full mr-2">4</div>
+                    רשימת פריטים
+                </h2>
+                <div class="relative">
+                    <select id="productCategory" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary bg-white">
+                        <option value="all">כל הקטגוריות</option>
+                        <option value="בלוקים">בלוקים</option>
+                        <option value="מלט וגבס">מלט וגבס</option>
+                        <option value="ברזל">ברזל</option>
+                        <option value="גבס">לוחות גבס</option>
+                        <option value="קרמיקה">קרמיקה ופורצלן</option>
+                        <option value="צבע">צבעים</option>
+                        <option value="צנרת">צנרת</option>
+                        <option value="דבקים">דבקים ורובה</option>
+                        <option value="חומרים">חומרים (חול, טיט, חצץ)</option>
+                    </select>
+                    <label for="productCategory" class="floating-label">קטגוריית מוצר</label>
+                </div>
+                <div id="items-container" class="space-y-4"></div>
+                <button type="button" id="addItem" class="w-full border-2 border-dashed border-primary text-primary py-3 rounded-button hover:bg-blue-50 transition duration-300 flex items-center justify-center">
+                    <i class="ri-add-line ri-lg ml-2"></i>
+                    הוסף פריט
+                </button>
+                <div class="flex gap-4">
+                    <button type="button" id="backToDelivery" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300 transition duration-300">חזרה</button>
+                    <button type="button" id="nextToNotes" class="flex-1 bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">המשך</button>
+                </div>
+            </section>
+
+            <!-- Notes Section -->
+            <section id="section-notes" class="glassmorphism p-6 space-y-5 hidden animate-slide-up">
+                <h2 class="text-xl font-bold text-primary flex items-center">
+                    <div class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full mr-2">5</div>
+                    הערות וסיום
+                </h2>
+                <div class="relative">
+                    <textarea id="notes" name="notes" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary" placeholder="הערות נוספות להזמנה..."></textarea>
+                </div>
+                <div id="orderSummary" class="bg-blue-50 p-4 rounded-xl border border-blue-100 hidden">
+                    <h3 class="font-bold mb-2">סיכום הזמנה:</h3>
+                    <div id="summaryContent" class="text-sm space-y-1"></div>
+                </div>
+                <div class="flex gap-4">
+                    <button type="button" id="saveDraft" class="flex-1 bg-yellow-500 text-white py-3 rounded-button hover:bg-yellow-600 transition duration-300 flex items-center justify-center">
+                        <i class="ri-save-line ri-lg ml-2"></i>
+                        שמור טיוטה
+                    </button>
+                    <button type="button" id="sendOrder" class="flex-1 bg-accent text-white py-3 rounded-button hover:bg-green-600 transition duration-300 flex items-center justify-center">
+                        <i class="ri-whatsapp-line ri-lg ml-2"></i>
+                        שלח הזמנה
+                    </button>
+                </div>
+                <button type="button" id="backToItems" class="w-full bg-gray-200 text-gray-700 py-3 rounded-button hover:bg-gray-300 transition duration-300">חזרה</button>
+            </section>
+
+            <!-- Info Section -->
+            <section id="section-info" class="glassmorphism p-6 space-y-5 hidden animate-slide-up">
+                <h2 class="text-xl font-bold text-primary">מידע על מחלקת הזמנות</h2>
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">על המחלקה</h3>
+                        <p class="text-gray-600 leading-relaxed">
+                            מחלקת ההזמנות של ח.סבן חומרי בניין מציעה שירות מקצועי ומהיר עם מגוון רחב של חומרי בניין איכותיים. אנו מתחייבים לספק פתרונות מותאמים אישית לכל לקוח, בין אם אתם קבלנים, בעלי מקצוע או לקוחות פרטיים.
+                        </p>
+                    </div>
+                    <div id="products">
+                        <h3 class="text-lg font-semibold">מוצרים זמינים</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li>בלוקים (7 ס"מ, 10 ס"מ, 15 ס"מ, 20 ס"מ, 22 ס"מ, 25 ס"מ)</li>
+                            <li>מלט (אפור, לבן)</li>
+                            <li>ברזל בניין (8 מ"מ, 10 מ"מ, 12 מ"מ, 14 מ"מ, 16 מ"מ)</li>
+                            <li>לוחות גבס (לבן, ירוק, ורוד, כתום)</li>
+                            <li>קרמיקה ופורצלן</li>
+                            <li>צבעים (נירלט, טמבור)</li>
+                            <li>צנרת וביוב</li>
+                            <li>דבקים ורובה</li>
+                            <li>חול, טיט, חצץ</li>
+                        </ul>
+                        <p class="text-gray-600 mt-2">לפרטים נוספים: <a href="tel:097602010" class="text-primary hover:underline">09-7602010</a></p>
+                    </div>
+                </div>
+                <button type="button" onclick="showSection(0)" class="w-full bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">חזרה</button>
+            </section>
+
+            <!-- Hours Section -->
+            <section id="section-hours" class="glassmorphism p-6 space-y-5 hidden animate-slide-up">
+                <h2 class="text-xl font-bold text-primary">שעות פעילות הסניפים</h2>
+                <div class="space-y-4">
+                    <div class="branch-card">
+                        <div class="branch-title">סניף התלמיד 6, הוד השרון</div>
+                        <div class="branch-hours">שעות פעילות: <span>א'-ה': 06:00-18:00 | ו': 06:00-14:00</span></div>
+                        <div class="branch-hours">שעות איסוף: <span>06:00-16:00</span></div>
+                        <div class="branch-phone">טלפון: 09-7602010</div>
+                        <div class="branch-address">כתובת: התלמיד 6, הוד השרון</div>
+                        <button onclick="navigateToBranch('התלמיד 6, הוד השרון')" class="branch-button bg-primary text-white py-2 rounded-button hover:bg-blue-700">
+                            <i class="ri-map-pin-line"></i> ניווט לסניף
+                        </button>
+                    </div>
+                    <div class="branch-card">
+                        <div class="branch-title">סניף החרש 10, הוד השרון</div>
+                        <div class="branch-hours">שעות פעילות: <span>א'-ה': 06:00-18:00 | ו': 06:00-14:00</span></div>
+                        <div class="branch-hours">שעות איסוף: <span>06:00-16:00</span></div>
+                        <div class="branch-phone">טלפון: 09-7402575</div>
+                        <div class="branch-address">כתובת: החרש 10, הוד השרון</div>
+                        <button onclick="navigateToBranch('החרש 10, הוד השרון')" class="branch-button bg-primary text-white py-2 rounded-button hover:bg-blue-700">
+                            <i class="ri-map-pin-line"></i> ניווט לסניף
+                        </button>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <h3 class="font-bold mb-2">שעות משלוחים:</h3>
+                        <p class="text-sm">א'-ה': 06:30-16:30</p>
+                        <p class="text-sm">ו': 06:30-13:00</p>
+                    </div>
+                </div>
+                <button type="button" onclick="showSection(0)" class="w-full bg-primary text-white py-3 rounded-button hover:bg-blue-700 transition duration-300">חזרה</button>
+            </section>
+        </form>
+    </div>
+
+    <script>
+    // Sample data
+    const cities = ["ירושלים", "תל אביב", "חיפה", "ראשון לציון", "פתח תקווה", "אשדוד", "נתניה", "באר שבע", "חולון", "בני ברק"];
+    const products = [
+  // ברזל למסגרות 🧱
+  { name: "🧱 מסלול 0.6 70/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.6 50/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.6 37/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.6 100/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.5 70/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.5 50/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.5 37/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.5 28/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול 0.5 100/300", category: "ברזל למסגרות" },
+  { name: "🧱 מסלול אומגה תקן 300", category: "ברזל למסגרות" },
+
+  // חומרים 🧪
+  { name: "🪨 חול שק גדול", category: "חומרים" },
+  { name: "🪨 סומסום שק גדול", category: "חומרים" },
+  { name: "🪵 טיט שק", category: "חומרים" },
+  { name: "🪵 טיט שק גדול", category: "חומרים" },
+  { name: "🧪 שליט מוכן", category: "חומרים" },
+  { name: "🪨 חצץ שק גדול", category: "חומרים" },
+  { name: "🪵 טיט שק קטן", category: "חומרים" },
+  { name: "🪨 סומסום שק קטן", category: "חומרים" },
+  { name: "🪨 חצץ שק קטן", category: "חומרים" },
+  { name: "🌾 חמרה שק גדול", category: "חומרים" },
+  { name: "🌿 חול גנים שק גדול", category: "חומרים" },
+  { name: "💧 חצץ ניקוז שק גדול", category: "חומרים" },
+  { name: "🧱 בטון מוכן שק 25 ק\"ג", category: "חומרים" },
+  { name: "🎨 שליכט מוכן שק 20 ק\"ג", category: "חומרים" },
+  { name: "⚪ סיד שק חבית", category: "חומרים" },
+  { name: "🪣 שליכט מוכן חבית", category: "חומרים" },
+  { name: "🪨 חול שק קטן", category: "חומרים" },
+  { name: "⚡ בטון מהיר 25 ק\"ג", category: "חומרים" },
+  { name: "🧱 מלט,אפור 25 ק\"ג", category: "חומרים" },
+  { name: "⬜ מלט,לבן 25 ק\"ג", category: "חומרים" },
+  { name: "🎭 גבס,שפכטל 25 ק\"ג", category: "חומרים" },
+  { name: "🎭 טיח גבס שק 25 ק\"ג", category: "חומרים" },
+  { name: "🧴 רוקבונד פח 24 ק\"ג", category: "חומרים" },
+  { name: "🧰 שפכטל חוץ 5 ק\"ג", category: "חומרים" },
+  { name: "🪞 פרופילה 5 ק\"ג", category: "חומרים" },
+
+  // בלוקים 🧱
+  { name: "🧱 בלוק,7 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,10 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,15 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,20 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,22 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,25 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,וופלה 3 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק,וופלה 4 ס\"מ", category: "בלוקים" },
+  { name: "🧱 בלוק תרמי 22/20/40 5 חורים", category: "בלוקים" },
+  { name: "🧱 בלוק שוקת 20/20/40", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 20/20/40 4 חורים", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 20/20/40 2 חורים", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 15/20/40 4 חורים", category: "בלוקים" },
+  { name: "🧱 בלוק ופלה 10/10/40", category: "בלוקים" },
+  { name: "🧱 בלוק ופלה 20/10/40", category: "בלוקים" },
+  { name: "🧱 בלוק קוביה 20 []", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 10/20/40", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 7/20/40", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 4/20/40 (פלטה)", category: "בלוקים" },
+  { name: "🧱 בלוק בטון 3/20/40 (פלטה)", category: "בלוקים" },
+  { name: "🧱 בלוק,7 ס\"מ", category: "בלוקים" },
+
+  // ברזל 🧲
+  { name: "🧲 ברזל בניין,8 מ\"מ, 3 מטר", category: "ברזל" },
+  { name: "🧲 ברזל בניין,10 מ\"מ, 3 מטר", category: "ברזל" },
+  { name: "🧲 ברזל בניין,12 מ\"מ, 3 מטר", category: "ברזל" },
+  { name: "🧲 ברזל בניין,14 מ\"מ, 3 מטר", category: "ברזל" },
+  { name: "🧲 ברזל בניין,16 מ\"מ", category: "ברזל" },
+  { name: "🧲 רשת ברזל 6 מ\"מ,20x20 3X2", category: "ברזל" },
+  { name: "🧲 רשת ברזל 8 מ\"מ,20x20 3X2", category: "ברזל" },
+  { name: "🧲 רשת ברזל,10x10", category: "ברזל" },
+  { name: "🧲 ברזל בניין 16 מ\"מ 6 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 14 מ\"מ 6 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 12 מ\"מ 6 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 12 מ\"מ 3 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 10 מ\"מ 6 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 10 מ\"מ 3 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 8 מ\"מ 6 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 8 מ\"מ 3 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 6 מ\"מ 6 מ.א.", category: "ברזל" },
+  { name: "🧲 ברזל בניין 6 מ\"מ 3 מ.א.", category: "ברזל" },
+  { name: "🧲 רשת ברזל ג' חם 4.2 10#10 2.9X2.1", category: "ברזל" },
+  { name: "🧲 רשת ברזל 6.5 20#20 3X2.5", category: "ברזל" },
+  { name: "🧲 רשת ברזל 8.0 20#20 3X2.5", category: "ברזל" },
+  { name: "🧲 שומר מרחק לרשת ברזל 10 מ\"מ 500 יח' UP10", category: "ברזל" },
+
+  // גבס 🧻
+  { name: "🧻 לוח גבס,לבן 2.0", category: "גבס" },
+  { name: "🧻 לוח גבס,לבן 2.6", category: "גבס" },
+  { name: "🧻 לוח גבס,לבן 3.0", category: "גבס" },
+  { name: "🟩 לוח גבס,ירוק 2.0", category: "גבס" },
+  { name: "🟩 לוח גבס,ירוק 2.6", category: "גבס" },
+  // המשך לפי הצורך
+];
+
+
+        // Web App URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzmKYTr_qOM8yy1Ay68CXK_n6cpGDy5WOF4tnU1imwalNZTLrgDzE_aHq_CwklCOXMY8g/exec';
+
+        // Fuse.js for fuzzy search
+        const fuse = new Fuse(products, {
+            keys: ['name'],
+            threshold: 0.3,
+            includeScore: true
+        });
+
+        // Block extension events
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'extensionEvent') {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }, true);
+
+        // Server communication
+        async function sendToServer(action, data) {
+            try {
+                const requestId = Math.random().toString(36).substring(2, 15);
+                data.requestId = requestId;
+                const response = await fetch(`${WEB_APP_URL}?action=${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(data),
+                    credentials: 'omit'
+                });
+
+                if (!response.ok) throw new Error(`שגיאת שרת: ${response.status}`);
+                const result = await response.json();
+
+                if (result.requestId !== requestId) {
+                    throw new Error('תשובה לא מאומתת מהשרת');
+                }
+
+                return result;
+            } catch (error) {
+                console.error('שגיאה בתקשורת עם השרת:', error);
+                return {
+                    success: false,
+                    error: 'שגיאה בתקשורת עם השרת',
+                    details: error.message
+                };
+            }
+        }
+
+        // Submit order
+        let currentOrderData = null;
+        async function submitOrder(orderData) {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            loadingSpinner.classList.remove('hidden');
+
+            try {
+                console.log('Sending order data to server:', orderData);
+                const response = await sendToServer('submitOrder', {
+                    customerName: orderData.customerName,
+                    customerPhone: orderData.customerPhone,
+                    deliveryType: orderData.deliveryType,
+                    deliveryDate: orderData.deliveryDate || '',
+                    deliveryTime: orderData.deliveryTime || '',
+                    city: orderData.city || '',
+                    street: orderData.street || '',
+                    streetNumber: orderData.streetNumber || '',
+                    contactPerson: orderData.contactPerson || '',
+                    contactPhone: orderData.contactPhone || '',
+                    items: orderData.items,
+                    notes: orderData.notes || ''
+                });
+
+                if (!response.success) {
+                    throw new Error(response.error || 'שגיאה בעיבוד ההזמנה');
+                }
+
+                console.log('Server response:', response);
+
+                // Show success message
+                document.getElementById('orderForm').classList.add('hidden');
+                document.getElementById('successMessage').classList.remove('hidden');
+
+                // Send WhatsApp message
+                try {
+                    sendToWhatsApp(orderData, response.data?.orderId || 'לא זמין');
+                } catch (whatsappError) {
+                    console.error('שגיאה בשליחת הודעת ווצאפ:', whatsappError);
+                    alert('ההזמנה נשלחה בהצלחה, אך לא ניתן היה לפתוח את הודעת הווצאפ. אנא שלחו את פרטי ההזמנה ידנית למספר: +972508860896');
+                }
+
+                // Clear draft
+                localStorage.removeItem('orderDraft');
+            } catch (error) {
+                console.error('שגיאה בשליחת ההזמנה:', error);
+                showError(document.getElementById('sendOrder'), error.message);
+            } finally {
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        // Send to WhatsApp
+        function sendToWhatsApp(orderData, orderId) {
+            try {
+                console.log('Preparing WhatsApp message with order data:', orderData);
+                const items = JSON.parse(orderData.items);
+                let itemsList = '';
+                if (items.length === 0) {
+                    itemsList = 'אין פריטים';
+                } else {
+                    itemsList = items.map(item => `- ${item.product} x${item.quantity}`).join('\n');
+                }
+
+                const address = `${orderData.street || ''}${orderData.streetNumber ? ` מס' ${orderData.streetNumber}` : ''}${orderData.city ? `, ${orderData.city}` : ''}`.trim() || 'לא צוין';
+
+                const message = `📦 הזמנה חדשה מח.סבן (מס' הזמנה: ${orderId})
+**שם לקוח**: ${orderData.customerName || 'לא צוין'}
+**טלפון**: ${orderData.customerPhone || 'לא צוין'}
+**סוג אספקה**: ${orderData.deliveryType || 'לא צוין'}
+**תאריך אספקה**: ${orderData.deliveryDate || 'לא צוין'}
+**שעת אספקה**: ${orderData.deliveryTime || 'לא צוין'}
+**כתובת**: ${address}
+**איש קשר**: ${orderData.contactPerson || 'לא צוין'}${orderData.contactPhone ? ` (${orderData.contactPhone})` : ''}
+**פריטים**:
+${itemsList}
+**הערות**: ${orderData.notes || 'אין הערות'}`;
+
+                console.log('WhatsApp message:', message);
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://wa.me/972508860896?text=${encodedMessage}`;
+                console.log('WhatsApp URL:', whatsappUrl);
+
+                const whatsappWindow = window.open(whatsappUrl, '_blank');
+                if (!whatsappWindow) {
+                    throw new Error('לא ניתן לפתוח את חלון הווצאפ. אנא בדקו את הגדרות הדפדפן.');
+                }
+            } catch (error) {
+                console.error('שגיאה בהכנת הודעת ווצאפ:', error);
+                throw error;
+            }
+        }
+
+        // Send to Email
+        function sendToEmail(orderData) {
+            try {
+                const items = JSON.parse(orderData.items);
+                let itemsList = '';
+                if (items.length === 0) {
+                    itemsList = 'אין פריטים';
+                } else {
+                    itemsList = items.map(item => `- ${item.product} x${item.quantity}`).join('\n');
+                }
+
+                const address = `${orderData.street || ''}${orderData.streetNumber ? ` מס' ${orderData.streetNumber}` : ''}${orderData.city ? `, ${orderData.city}` : ''}`.trim() || 'לא צוין';
+
+                const subject = `הזמנה חדשה מ-${orderData.customerName || 'לקוח'}`;
+                const body = `הזמנה חדשה מח.סבן חומרי בניין
+
+פרטי לקוח:
+שם: ${orderData.customerName || 'לא צוין'}
+טלפון: ${orderData.customerPhone || 'לא צוין'}
+
+פרטי אספקה:
+סוג אספקה: ${orderData.deliveryType || 'לא צוין'}
+תאריך אספקה: ${orderData.deliveryDate || 'לא צוין'}
+שעת אספקה: ${orderData.deliveryTime || 'לא צוין'}
+כתובת: ${address}
+איש קשר: ${orderData.contactPerson || 'לא צוין'}${orderData.contactPhone ? ` (${orderData.contactPhone})` : ''}
+
+פריטים:
+${itemsList}
+
+הערות: ${orderData.notes || 'אין הערות'}
+
+תודה רבה!`;
+
+                const mailtoLink = `mailto:ramims@saban94.co.il?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                window.location.href = mailtoLink;
+            } catch (error) {
+                console.error('שגיאה בשליחת המייל:', error);
+                alert('לא ניתן לפתוח את לקוח המייל. אנא העתיקו את פרטי ההזמנה ושלחו ידנית ל-ramims@saban94.co.il');
+            }
+        }
+
+        // Collect form data
+        function collectFormData() {
+            const formData = {
+                customerName: document.getElementById('customerName').value.trim(),
+                customerPhone: document.getElementById('customerPhone').value.trim(),
+                deliveryType: document.getElementById('deliveryType').value,
+                deliveryDate: document.getElementById('deliveryDate').value,
+                deliveryTime: document.getElementById('deliveryTime').value,
+                city: document.getElementById('city').value.trim(),
+                street: document.getElementById('street').value.trim(),
+                streetNumber: document.getElementById('streetNumber').value.trim(),
+                contactPerson: document.getElementById('contactPerson').value.trim(),
+                contactPhone: document.getElementById('contactPhone').value.trim(),
+                notes: document.getElementById('notes').value.trim(),
+                items: JSON.stringify(getOrderItems())
+            };
+            console.log('Collected form data:', formData);
+            return formData;
+        }
+
+        // Get order items
+        function getOrderItems() {
+            const items = [];
+            const itemsContainer = document.getElementById('items-container');
+
+            for (let i = 0; i < itemsContainer.children.length; i++) {
+                const itemId = itemsContainer.children[i].id;
+                const product = document.getElementById(`product-${itemId}`).value.trim();
+                const quantity = document.getElementById(`quantity-${itemId}`).value;
+                if (product && quantity) {
+                    items.push({
+                        product: product,
+                        quantity: quantity
+                    });
+                }
+            }
+
+            return items;
+        }
+
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+
+            const customerName = document.getElementById('customerName');
+            if (!customerName.value.trim()) {
+                showError(customerName, 'שם לקוח הוא שדה חובה');
+                isValid = false;
+            }
+
+            const customerPhone = document.getElementById('customerPhone');
+            if (!customerPhone.value.trim()) {
+                showError(customerPhone, 'מספר טלפון הוא שדה חובה');
+                isValid = false;
+            } else if (!customerPhone.checkValidity()) {
+                showError(customerPhone, 'מספר טלפון לא תקין');
+                isValid = false;
+            }
+
+            const deliveryType = document.getElementById('deliveryType');
+            if (!deliveryType.value) {
+                showError(deliveryType, 'יש לבחור סוג אספקה');
+                isValid = false;
+            }
+
+            const itemsContainer = document.getElementById('items-container');
+            if (itemsContainer.children.length === 0) {
+                showError(document.getElementById('addItem'), 'יש להוסיף לפחות פריט אחד');
+                isValid = false;
+            } else {
+                for (let i = 0; i < itemsContainer.children.length; i++) {
+                    const itemId = itemsContainer.children[i].id;
+                    const product = document.getElementById(`product-${itemId}`);
+                    if (!product.value.trim()) {
+                        showError(product, 'יש לבחור מוצר');
+                        isValid = false;
+                    }
+                    const quantity = document.getElementById(`quantity-${itemId}`);
+                    if (!quantity.value || quantity.value < 1) {
+                        showError(quantity, 'יש לציין כמות תקינה');
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Soft validation for optional fields
+            if (!document.getElementById('deliveryDate').value) {
+                showError(document.getElementById('deliveryDate'), 'מומלץ לבחור תאריך אספקה', true);
+            }
+
+            if (!document.getElementById('city').value.trim()) {
+                showError(document.getElementById('city'), 'מומלץ לציין עיר', true);
+            }
+
+            return isValid;
+        }
+
+        // Navigation and section handling
+        const sections = ['section-welcome', 'section-customer', 'section-delivery', 'section-items', 'section-notes', 'section-info', 'section-hours'];
+        let currentSection = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const progressSteps = document.querySelectorAll('.progress-step');
+
+        function updateProgressBar() {
+            if (currentSection <= 4) {
+                progressBar.style.width = `${(currentSection + 1) * 20}%`;
+                progressSteps.forEach((step, index) => {
+                    step.classList.toggle('active', index <= currentSection);
+                });
+            } else {
+                progressBar.style.width = `20%`;
+                progressSteps.forEach((step, index) => {
+                    step.classList.toggle('active', index === 0);
+                });
+            }
+        }
+
+        function showSection(index) {
+            sections.forEach((sectionId, i) => {
+                const section = document.getElementById(sectionId);
+                if (i === index) {
+                    section.classList.remove('hidden');
+                    section.classList.add('animate-slide-up');
+                } else {
+                    section.classList.add('hidden');
+                    section.classList.remove('animate-slide-up');
+                }
+            });
+            currentSection = index;
+            updateProgressBar();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Update tab bar
+            const tabItems = document.querySelectorAll('.tab-item');
+            tabItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index || (index > 4 && i === 0));
+            });
+        }
+
+        function validateCustomerSection() {
+            const customerName = document.getElementById('customerName');
+            const customerPhone = document.getElementById('customerPhone');
+
+            if (!customerName.value.trim()) {
+                customerName.focus();
+                showError(customerName, 'שם לקוח הוא שדה חובה');
+                return false;
+            }
+
+            if (!customerPhone.value.trim()) {
+                customerPhone.focus();
+                showError(customerPhone, 'מספר טלפון הוא שדה חובה');
+                return false;
+            }
+
+            if (!customerPhone.checkValidity()) {
+                customerPhone.focus();
+                showError(customerPhone, 'מספר טלפון לא תקין');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateDeliverySection() {
+            const deliveryType = document.getElementById('deliveryType');
+
+            if (deliveryType.value === "") {
+                deliveryType.focus();
+                showError(deliveryType, 'יש לבחור סוג אספקה');
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateItemsSection() {
+            const itemsContainer = document.getElementById('items-container');
+            if (itemsContainer.children.length === 0) {
+                showError(document.getElementById('addItem'), 'יש להוסיף לפחות פריט אחד');
+                return false;
+            }
+
+            for (let i = 0; i < itemsContainer.children.length; i++) {
+                const itemId = itemsContainer.children[i].id;
+                const product = document.getElementById(`product-${itemId}`);
+                if (!product.value.trim()) {
+                    showError(product, 'יש לבחור מוצר');
+                    return false;
+                }
+                const quantity = document.getElementById(`quantity-${itemId}`);
+                if (!quantity.value || quantity.value < 1) {
+                    showError(quantity, 'יש לציין כמות תקינה');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function showError(element, message, isWarning = false) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = `text-${isWarning ? 'yellow' : 'red'}-500 text-sm mt-1 animate-slide-up`;
+            errorDiv.textContent = message;
+
+            const existingError = element.parentNode.querySelector('.text-red-500, .text-yellow-500');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            element.parentNode.appendChild(errorDiv);
+            element.classList.add(`border-${isWarning ? 'yellow' : 'red'}-500`);
+
+            setTimeout(() => {
+                errorDiv.remove();
+                element.classList.remove(`border-${isWarning ? 'yellow' : 'red'}-500`);
+            }, 3000);
+        }
+
+        // City autocomplete
+        const cityInput = document.getElementById('city');
+        const cityAutocomplete = document.getElementById('cityAutocomplete');
+
+        cityInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            cityAutocomplete.innerHTML = '';
+
+            if (value.length < 2) {
+                cityAutocomplete.classList.add('hidden');
+                return;
+            }
+
+            const filteredCities = cities.filter(city =>
+                city.toLowerCase().includes(value.toLowerCase())
+            );
+
+            if (filteredCities.length > 0) {
+                cityAutocomplete.classList.remove('hidden');
+                filteredCities.forEach(city => {
+                    const div = document.createElement('div');
+                    div.textContent = city;
+                    div.addEventListener('click', function() {
+                        cityInput.value = city;
+                        cityAutocomplete.classList.add('hidden');
+                    });
+                    cityAutocomplete.appendChild(div);
+                });
+            } else {
+                cityAutocomplete.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!cityInput.contains(e.target) && !cityAutocomplete.contains(e.target)) {
+                cityAutocomplete.classList.add('hidden');
+            }
+        });
+
+        // Calendar functionality
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+
+        function generateCalendar(month, year) {
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            
+            // Set month name
+            const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+            document.getElementById('currentMonth').textContent = monthNames[month] + ' ' + year;
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day', 'disabled');
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                dayElement.textContent = day;
+                
+                const currentDate = new Date(year, month, day);
+                
+                // Disable past dates and Saturdays
+                if (currentDate < today || currentDate.getDay() === 6) {
+                    dayElement.classList.add('disabled');
+                } else {
+                    dayElement.addEventListener('click', () => selectCalendarDate(dayElement, day, month, year));
+                }
+                
+                // Highlight selected date
+                if (selectedDate && selectedDate.getDate() === day && 
+                    selectedDate.getMonth() === month && 
+                    selectedDate.getFullYear() === year) {
+                    dayElement.classList.add('selected');
+                }
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+
+        function selectCalendarDate(element, day, month, year) {
+            // Remove selection from all days
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            // Add selection to clicked day
+            element.classList.add('selected');
+            selectedDate = new Date(year, month, day);
+        }
+
+        document.getElementById('prevMonthBtn').addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar(currentMonth, currentYear);
+        });
+
+        document.getElementById('nextMonthBtn').addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar(currentMonth, currentYear);
+        });
+
+        document.getElementById('closeCalendarBtn').addEventListener('click', () => {
+            document.getElementById('calendarPopup').classList.add('hidden');
+        });
+
+        document.getElementById('confirmDateBtn').addEventListener('click', () => {
+            if (selectedDate) {
+                const formattedDate = selectedDate.toISOString().split('T')[0];
+                document.getElementById('deliveryDate').value = formattedDate;
+                document.getElementById('calendarPopup').classList.add('hidden');
+            } else {
+                alert('אנא בחר תאריך אספקה');
+            }
+        });
+
+        // Enhanced delivery date input click handler
+        document.getElementById('deliveryDate').addEventListener('click', function() {
+            selectedDate = this.value ? new Date(this.value) : new Date();
+            currentMonth = selectedDate.getMonth();
+            currentYear = selectedDate.getFullYear();
+            generateCalendar(currentMonth, currentYear);
+            document.getElementById('calendarPopup').classList.remove('hidden');
+        });
+
+        // Add item functionality
+        let itemCounter = 0;
+
+        function addItemRow() {
+            const itemsContainer = document.getElementById('items-container');
+            const itemId = `item-${itemCounter++}`;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.id = itemId;
+            itemDiv.className = 'bg-white p-4 rounded-xl border border-gray-200 shadow-sm animate-slide-up';
+
+            const productAutocompleteId = `product-autocomplete-${itemId}`;
+
+            itemDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-medium text-gray-800">פריט #${itemCounter}</h4>
+                    <button type="button" class="text-red-500 hover:text-red-700 transition duration-300" onclick="removeItem('${itemId}')">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div class="relative autocomplete-container">
+                        <input type="text" id="product-${itemId}" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" ">
+                        <label for="product-${itemId}" class="floating-label">מוצר *</label>
+                        <div id="${productAutocompleteId}" class="autocomplete-items hidden"></div>
+                    </div>
+                    <div class="relative">
+                        <input type="number" id="quantity-${itemId}" class="w-full px-4 py-3 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary placeholder-transparent" placeholder=" " value="1" min="1">
+                        <label for="quantity-${itemId}" class="floating-label">כמות *</label>
+                    </div>
+                </div>
+            `;
+
+            itemsContainer.appendChild(itemDiv);
+
+            const productInput = document.getElementById(`product-${itemId}`);
+            const productAutocomplete = document.getElementById(productAutocompleteId);
+            const categorySelect = document.getElementById('productCategory');
+
+            productInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                productAutocomplete.innerHTML = '';
+
+                if (value.length < 2) {
+                    productAutocomplete.classList.add('hidden');
+                    return;
+                }
+
+                const category = categorySelect.value;
+                let filteredProducts = products;
+
+                if (category !== 'all') {
+                    filteredProducts = products.filter(product => product.category === category);
+                }
+
+                const fuseResults = fuse.search(value, { limit: 10 });
+                const suggestions = fuseResults
+                    .filter(result => filteredProducts.some(p => p.name === result.item.name))
+                    .map(result => result.item.name);
+
+                if (suggestions.length > 0) {
+                    productAutocomplete.classList.remove('hidden');
+                    suggestions.forEach(product => {
+                        const div = document.createElement('div');
+                        div.textContent = product;
+                        div.addEventListener('click', function() {
+                            productInput.value = product;
+                            productAutocomplete.classList.add('hidden');
+                        });
+                        productAutocomplete.appendChild(div);
+                    });
+                } else {
+                    productAutocomplete.classList.add('hidden');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!productInput.contains(e.target) && !productAutocomplete.contains(e.target)) {
+                    productAutocomplete.classList.add('hidden');
+                }
+            });
+
+            productInput.focus();
+        }
+
+        window.removeItem = function(itemId) {
+            const item = document.getElementById(itemId);
+            item.classList.add('animate-slide-up');
+            setTimeout(() => {
+                item.remove();
+                updateOrderSummary();
+            }, 300);
+        };
+
+        // Order summary
+        function updateOrderSummary() {
+            const orderData = collectFormData();
+            const summaryContent = document.getElementById('summaryContent');
+            const orderSummary = document.getElementById('orderSummary');
+            const items = JSON.parse(orderData.items);
+
+            let summaryHtml = `
+                <p><strong>שם לקוח:</strong> ${orderData.customerName || 'לא צוין'}</p>
+                <p><strong>טלפון:</strong> ${orderData.customerPhone || 'לא צוין'}</p>
+                <p><strong>סוג אספקה:</strong> ${orderData.deliveryType || 'לא צוין'}</p>
+                <p><strong>תאריך אספקה:</strong> ${orderData.deliveryDate || 'לא צוין'}</p>
+                <p><strong>שעת אספקה:</strong> ${orderData.deliveryTime || 'לא צוין'}</p>
+                <p><strong>כתובת:</strong> ${orderData.street || ''}${orderData.streetNumber ? ` מס' ${orderData.streetNumber}` : ''}${orderData.city ? `, ${orderData.city}` : '' || 'לא צוין'}</p>
+                <p><strong>איש קשר:</strong> ${orderData.contactPerson || 'לא צוין'}${orderData.contactPhone ? ` (${orderData.contactPhone})` : ''}</p>
+                <p><strong>פריטים:</strong></p>
+                <ul class="list-disc list-inside">
+                    ${items.length > 0 ? items.map(item => `<li>${item.product} x${item.quantity}</li>`).join('') : '<li>אין פריטים</li>'}
+                </ul>
+                <p><strong>הערות:</strong> ${orderData.notes || 'אין הערות'}</p>
+            `;
+
+            summaryContent.innerHTML = summaryHtml;
+            orderSummary.classList.remove('hidden');
+        }
+
+        // Confirmation modal
+        function showConfirmationModal() {
+            if (!validateForm()) return;
+
+            const orderData = collectFormData();
+            const items = JSON.parse(orderData.items);
+            const confirmationSummary = document.getElementById('confirmationSummary');
+
+            let summaryHtml = `
+                <p><strong>שם לקוח:</strong> ${orderData.customerName}</p>
+                <p><strong>טלפון:</strong> ${orderData.customerPhone}</p>
+                <p><strong>סוג אספקה:</strong> ${orderData.deliveryType}</p>
+                <p><strong>תאריך אספקה:</strong> ${orderData.deliveryDate || 'לא צוין'}</p>
+                <p><strong>שעת אספקה:</strong> ${orderData.deliveryTime || 'לא צוין'}</p>
+                <p><strong>כתובת:</strong> ${orderData.street || ''}${orderData.streetNumber ? ` מס' ${orderData.streetNumber}` : ''}${orderData.city ? `, ${orderData.city}` : '' || 'לא צוין'}</p>
+                <p><strong>פריטים:</strong></p>
+                <ul class="list-disc list-inside">
+                    ${items.length > 0 ? items.map(item => `<li>${item.product} x${item.quantity}</li>`).join('') : '<li>אין פריטים</li>'}
+                </ul>
+            `;
+
+            confirmationSummary.innerHTML = summaryHtml;
+            document.getElementById('confirmationModal').classList.remove('hidden');
+            currentOrderData = orderData;
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            currentOrderData = null;
+        }
+
+        function confirmOrder() {
+            if (currentOrderData) {
+                submitOrder(currentOrderData);
+                closeConfirmationModal();
+            }
+        }
+
+        // Save and load draft
+        function saveDraft() {
+            const orderData = collectFormData();
+            localStorage.setItem('orderDraft', JSON.stringify(orderData));
+            showError(document.getElementById('saveDraft'), 'הטיוטה נשמרה בהצלחה', true);
+        }
+
+        function loadDraft() {
+            const draft = localStorage.getItem('orderDraft');
+            if (draft) {
+                const orderData = JSON.parse(draft);
+                document.getElementById('customerName').value = orderData.customerName || '';
+                document.getElementById('customerPhone').value = orderData.customerPhone || '';
+                document.getElementById('deliveryType').value = orderData.deliveryType || '';
+                document.getElementById('deliveryDate').value = orderData.deliveryDate || '';
+                document.getElementById('deliveryTime').value = orderData.deliveryTime || '';
+                document.getElementById('city').value = orderData.city || '';
+                document.getElementById('street').value = orderData.street || '';
+                document.getElementById('streetNumber').value = orderData.streetNumber || '';
+                document.getElementById('contactPerson').value = orderData.contactPerson || '';
+                document.getElementById('contactPhone').value = orderData.contactPhone || '';
+                document.getElementById('notes').value = orderData.notes || '';
+
+                // Load items
+                const items = JSON.parse(orderData.items || '[]');
+                items.forEach(item => {
+                    addItemRow();
+                    const lastItemId = `item-${itemCounter-1}`;
+                    document.getElementById(`product-${lastItemId}`).value = item.product;
+                    document.getElementById(`quantity-${lastItemId}`).value = item.quantity;
+                });
+
+                showError(document.getElementById('saveDraft'), 'טיוטה נטענה בהצלחה', true);
+            }
+        }
+
+        // Welcome popup functions
+        function closeWelcomePopup() {
+            document.getElementById('welcomePopup').classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('welcomePopup').style.display = 'none';
+            }, 300);
+        }
+
+        function closeCrmPopup() {
+            document.getElementById('crmPopup').classList.remove('show');
+        }
+
+        // Color customization functions
+        function openColorPopup() {
+            document.getElementById('colorPopup').classList.add('active');
+        }
+
+        function closeColorPopup() {
+            document.getElementById('colorPopup').classList.remove('active');
+        }
+
+        function selectColor(element, colorName) {
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            element.classList.add('selected');
+
+            document.getElementById('colorPopup').setAttribute('data-selected-color', colorName);
+        }
+
+        function submitColorSelection() {
+            const selectedColor = document.getElementById('colorPopup').getAttribute('data-selected-color') || 'לבן';
+            const customColor = document.getElementById('customColor').value.trim();
+            const colorQuantity = document.getElementById('colorQuantity').value;
+            const selectedBranch = document.getElementById('colorBranch').value;
+
+            let colorNote = `גוון צבע: ${customColor || selectedColor} | כמות: ${colorQuantity} | איסוף מסניף: ${selectedBranch}`;
+            
+            const notes = document.getElementById('notes');
+            notes.value = `${notes.value ? notes.value + '\n' : ''}${colorNote}`;
+
+            closeColorPopup();
+
+            // Show success message with LED effect
+            const successMessage = document.createElement('div');
+            successMessage.className = 'led-message mt-4 animate-fade-in';
+            successMessage.innerHTML = `<span>✅ גוון הצבע "${customColor || selectedColor}" נבחר בהצלחה! הכמות: ${colorQuantity} | הסניף: ${selectedBranch}</span>`;
+            
+            const itemsSection = document.getElementById('section-items');
+            if (itemsSection) {
+                itemsSection.insertBefore(successMessage, itemsSection.firstChild);
+                
+                // Remove after 5 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
+            }
+        }
+
+        // Self pickup hours functions
+        function checkSelfPickup() {
+            const deliveryType = document.getElementById('deliveryType').value;
+            if (deliveryType === 'איסוף עצמי') {
+                document.getElementById('pickupHoursPopup').classList.add('active');
+            }
+        }
+
+        function closePickupHoursPopup() {
+            document.getElementById('pickupHoursPopup').classList.remove('active');
+        }
+
+        function navigateToBranch(branchName) {
+            let address = '';
+            if (branchName === 'התלמיד 6, הוד השרון') {
+                address = 'התלמיד 6, הוד השרון';
+            } else if (branchName === 'החרש 10, הוד השרון') {
+                address = 'החרש 10, הוד השרון';
+            }
+
+            if (address) {
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+                window.open(mapsUrl, '_blank');
+            }
+        }
+
+        // Update welcome message with customer name
+        function updateWelcomeMessage() {
+            const customerName = document.getElementById('customerName').value.trim();
+            const welcomeMessage = document.getElementById('personalWelcome');
+
+            if (customerName) {
+                welcomeMessage.textContent = `שלום ${customerName}! אנא מלאו את פרטי ההזמנה`;
+            } else {
+                welcomeMessage.textContent = 'ברוכים הבאים! אנא מלאו את פרטי ההזמנה';
+            }
+        }
+
+        // Chat functionality
+        const chatMessages = [
+            {
+                sender: 'bot',
+                text: 'שלום! 👋 אני הנציג הווירטואלי של ח.סבן חומרי בניין. אשמח לעזור לך עם ההזמנה. מה שמך?'
+            }
+        ];
+
+        function renderChatMessages() {
+            const chatMessagesContainer = document.getElementById('chatMessages');
+            chatMessagesContainer.innerHTML = '';
+            
+            chatMessages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(msg.sender === 'bot' ? 'bot-message' : 'user-message');
+                messageDiv.textContent = msg.text;
+                chatMessagesContainer.appendChild(messageDiv);
+            });
+            
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show welcome popup on first visit
+            const firstVisit = localStorage.getItem('firstVisit');
+            if (!firstVisit) {
+                document.getElementById('welcomePopup').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('welcomePopup').classList.add('active');
+                }, 100);
+                localStorage.setItem('firstVisit', 'true');
+            }
+
+            // Show CRM popup after 5 seconds
+            setTimeout(() => {
+                document.getElementById('crmPopup').classList.add('show');
+            }, 5000);
+
+            // Initialize calendar
+            generateCalendar(new Date().getMonth(), new Date().getFullYear());
+
+            // Chat button functionality
+            document.getElementById('chatBtn').addEventListener('click', function() {
+                document.getElementById('chatContainer').classList.toggle('active');
+            });
+
+            document.getElementById('chatClose').addEventListener('click', function() {
+                document.getElementById('chatContainer').classList.remove('active');
+            });
+
+            document.getElementById('chatSendBtn').addEventListener('click', function() {
+                const chatInput = document.getElementById('chatInput');
+                const message = chatInput.value.trim();
+                
+                if (message) {
+                    // Add user message
+                    chatMessages.push({
+                        sender: 'user',
+                        text: message
+                    });
+                    
+                    // Clear input
+                    chatInput.value = '';
+                    
+                    // Add bot response based on conversation state
+                    if (chatMessages.length === 2) {
+                        // After name
+                        chatMessages.push({
+                            sender: 'bot',
+                            text: `נעים להכיר! 📞 מה מספר הטלפון שלך כדי שנוכל לעדכן אותך לגבי ההזמנה?`
+                        });
+                    } else if (chatMessages.length === 4) {
+                        // After phone
+                        const customerName = chatMessages[1].text;
+                        const customerPhone = chatMessages[3].text;
+                        
+                        // Save to form
+                        document.getElementById('customerName').value = customerName;
+                        document.getElementById('customerPhone').value = customerPhone;
+                        
+                        chatMessages.push({
+                            sender: 'bot',
+                            text: `תודה רבה ${customerName}! 🤗 האם תרצה שאני אעביר את פרטיך להזמנה או שיש לך שאלות נוספות?`
+                        });
+                        
+                        // Add WhatsApp sharing button
+                        const whatsappDiv = document.createElement('div');
+                        whatsappDiv.classList.add('message', 'bot-message');
+                        whatsappDiv.innerHTML = `
+                            <p>ניתן לשתף את פרטיך בווצאפ לצוות ההזמנות שלנו:</p>
+                            <a href="https://wa.me/972508860896?text=שלום,%20שמי%20${encodeURIComponent(customerName)}%20וטלפון%20${encodeURIComponent(customerPhone)}%20אשמח%20להזמין%20חומרי%20בניין" 
+                               target="_blank" 
+                               class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg mt-2">
+                                <i class="ri-whatsapp-line"></i> שלח בווצאפ
+                            </a>
+                        `;
+                        document.getElementById('chatMessages').appendChild(whatsappDiv);
+                    }
+                    
+                    renderChatMessages();
+                }
+            });
+
+            // Navigation buttons
+            document.getElementById('nextToCustomer').addEventListener('click', function() {
+                showSection(1);
+            });
+
+            document.getElementById('backToWelcome').addEventListener('click', function() {
+                showSection(0);
+            });
+
+            document.getElementById('nextToDelivery').addEventListener('click', function() {
+                if (validateCustomerSection()) {
+                    showSection(2);
+                }
+            });
+
+            document.getElementById('backToCustomer').addEventListener('click', function() {
+                showSection(1);
+            });
+
+            document.getElementById('nextToItems').addEventListener('click', function() {
+                if (validateDeliverySection()) {
+                    showSection(3);
+                }
+            });
+
+            document.getElementById('backToDelivery').addEventListener('click', function() {
+                showSection(2);
+            });
+
+            document.getElementById('nextToNotes').addEventListener('click', function() {
+                if (validateItemsSection()) {
+                    showSection(4);
+                    updateOrderSummary();
+                }
+            });
+
+            document.getElementById('backToItems').addEventListener('click', function() {
+                showSection(3);
+            });
+
+            // Add item button
+            document.getElementById('addItem').addEventListener('click', addItemRow);
+
+            // Save draft button
+            document.getElementById('saveDraft').addEventListener('click', saveDraft);
+
+            // Send order button
+            document.getElementById('sendOrder').addEventListener('click', function() {
+                if (validateForm()) {
+                    const orderData = collectFormData();
+                    sendToWhatsApp(orderData, 'טרם נוצר');
+                    sendToEmail(orderData);
+                }
+            });
+
+            // Load draft if exists
+            loadDraft();
+
+            // Set today's date as default
+            document.getElementById('deliveryDate').value = new Date().toISOString().split('T')[0];
+
+            // Update welcome message when customer name changes
+            document.getElementById('customerName').addEventListener('input', updateWelcomeMessage);
+        });
+    </script>
+</body>
+</html>
