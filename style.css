@@ -1,0 +1,307 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
+
+/* Global Styles & Variables */
+body {
+    font-family: 'Rubik', sans-serif;
+    direction: rtl;
+    text-align: right;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+    --bg-start: #1c1c1c;
+    --bg-end: #0a0a0a;
+    --card-bg: #2b2b2b;
+    --text-color: #f0f0f0;
+    --text-secondary: #a0a0a0;
+    --border-color: #404040;
+    --input-bg: #3b3b3b;
+    --btn-primary: #3b82f6;
+    --btn-primary-hover: #2563eb;
+}
+
+body.light {
+    --bg-start: #f1f5f9;
+    --bg-end: #e2e8f0;
+    --card-bg: #ffffff;
+    --text-color: #0f172a;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --input-bg: #f8fafc;
+    --btn-primary: #3b82f6;
+    --btn-primary-hover: #2563eb;
+}
+
+.samsung-bg {
+    background: linear-gradient(to bottom right, var(--bg-start), var(--bg-end));
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 440px;
+    height: 100vh;
+    max-height: 950px;
+    background-color: var(--bg-start);
+    border: 12px solid #1c1c1c;
+    border-radius: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* מסכים */
+.screen {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+/* לוגו */
+.logo {
+    max-width: 120px;
+    height: auto;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+}
+
+/* קלט */
+.app-input {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.app-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.app-input:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* כפתורים */
+.app-btn {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    color: white;
+    background-color: var(--btn-primary);
+    transition: all 0.3s ease;
+}
+
+.app-btn:hover {
+    background-color: var(--btn-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* כפתור אייקון */
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* תגית התראה */
+.badge {
+    min-width: 20px;
+    height: 20px;
+    background-color: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+
+/* כרטיסי KPI */
+.kpi-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-radius: 1rem;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+}
+
+.kpi-icon {
+    font-size: 2.5rem;
+    opacity: 0.6;
+}
+
+.kpi-label {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* כרטיס אפליקציה כללי */
+.app-card {
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* טבלה */
+.app-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.app-table th, .app-table td {
+    padding: 0.75rem;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-table thead {
+    background-color: var(--input-bg);
+    font-weight: 600;
+}
+
+.app-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* סטטוסים בטבלה */
+.status-badge-table {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-active-badge {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-overdue-badge {
+    background-color: #fee2e2;
+    color: #991b1b;
+    animation: blink-red 1.5s infinite alternate;
+}
+
+@keyframes blink-red {
+    from { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    to { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
+/* גלילה */
+.content-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-grow: 1;
+    padding-bottom: 2rem;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+}
+
+.close-modal-btn {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* אנימציות */
+@keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes slide-out {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+}
+
+.screen.active {
+    animation: slide-in 0.5s forwards;
+}
+
+.screen.active.hidden {
+    animation: slide-out 0.5s forwards;
+}
+
+/* התאמה למכשירים ניידים */
+@media (max-width: 440px) {
+    .app-container {
+        border-radius: 0;
+        border: none;
+        max-height: unset;
+    }
+}
+
+.text-shadow-md {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.app-table th, .app-table td {
+    padding: 0.5rem;
+}
