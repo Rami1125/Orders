@@ -1,5 +1,5 @@
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxiS3wXwXCyh8xM1EdTiwXy0T-UyBRQgfrnRRis531lTxmgtJIGawfsPeetX5nVJW3V/exec';
-const SHEET_ID = '1TPwAP0h05IyzvusybJv3zMKSOKpFNUS9jZtEK5pSgps';
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwVESkVbGysFmjlPlIIC9disnE7dN8r-7wRaJSDBHnUMz8uO66mUz5VO7f8QLwBKzSU/exec';
+const SHEET_ID = '1xdEVKU5sreegA7Q0rOxY9ES5a3nsvxmCM7p7OCHaK0k';
 const OVERDUE_THRESHOLD = 10; // ימים לאחר מועד ההשכרה
 
 // אלמנטים
