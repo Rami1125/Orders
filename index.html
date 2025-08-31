@@ -2,93 +2,99 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת ניהול פרימיום</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>מ. סבן - ניהול הזמנות</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="samsung-bg">
-
-    <div class="app-container">
-        <!-- מסך כניסה -->
-        <div id="login-screen" class="screen active flex flex-col items-center justify-center p-4">
-            <img src="https://i.postimg.cc/J7JGQYcT/image.jpg" alt="Company Logo" class="w-32 mb-8 logo">
-            <h1 class="text-3xl font-bold mb-6 text-white text-shadow-md">ברוכים הבאים</h1>
-            <div class="w-full max-w-xs space-y-4">
-                <input type="tel" id="phone-input" placeholder="מספר טלפון" class="app-input">
-                <button id="login-btn" class="app-btn">התחבר</button>
+<body>
+    <div id="app-container">
+        <!-- מסך התחברות -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <header class="login-header">
+                    <img src="https://placehold.co/100x100/e2e8f0/334155?text=לוגו" alt="לוגו החברה" class="logo">
+                    <h1>מ. סבן חומרי בניין</h1>
+                    <p>ניהול הזמנות בשטח</p>
+                </header>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">שם משתמש</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">מספר טלפון</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary ripple">התחברות</button>
+                    <p id="login-error" class="error-message"></p>
+                </form>
             </div>
-            <p id="error-message" class="text-red-400 mt-4 hidden">מספר טלפון לא נמצא.</p>
         </div>
 
-        <!-- מסך ראשי -->
-        <div id="main-screen" class="screen p-4 hidden">
-            <header class="flex justify-between items-center mb-4">
-                <h1 id="user-name" class="text-xl font-bold text-white"></h1>
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <span id="notification-badge" class="badge">0</span>
-                    <button id="theme-toggle" class="icon-btn text-white"><i class="fas fa-moon"></i></button>
+        <!-- אפליקציה ראשית (מוסתרת עד להתחברות) -->
+        <main id="main-app" class="hidden">
+            <header id="app-header">
+                <h1 id="header-title">דף הבית</h1>
+                <div class="header-actions">
+                    <button id="sync-btn" class="icon-btn ripple"><i class="fas fa-sync-alt"></i></button>
+                    <button id="logout-btn" class="icon-btn ripple"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </header>
-
-            <main class="content-scroll space-y-4">
-                <!-- KPI קארדים -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="kpi-card bg-green-500">
-                        <span class="kpi-icon"><i class="fas fa-boxes"></i></span>
-                        <div>
-                            <p class="kpi-label">מכולות בשימוש</p>
-                            <p id="containers-in-use" class="kpi-value">0</p>
-                        </div>
-                    </div>
-                    <div class="kpi-card bg-red-500">
-                        <span class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></span>
-                        <div>
-                            <p class="kpi-label">מכולות בחריגה</p>
-                            <p id="overdue-containers" class="kpi-value">0</p>
-                        </div>
-                    </div>
+            
+            <div id="content">
+                <!-- כל מסכי האפליקציה יטענו כאן -->
+                <div id="home-screen" class="screen">
+                    <!-- תוכן דף הבית -->
                 </div>
-
-                <!-- טבלה אינטראקטיבית -->
-                <div class="app-card overflow-hidden">
-                    <div class="p-3 bg-gray-100 dark:bg-gray-700">
-                        <h2 class="font-bold text-lg">סטטוס מכולות</h2>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table id="containers-table" class="min-w-full text-right table-auto">
-                            <thead>
-                                <tr>
-                                    <th class="p-3">מכולה</th>
-                                    <th class="p-3">כתובת</th>
-                                    <th class="p-3">ימים</th>
-                                    <th class="p-3">סטטוס</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- שורות יוטענו כאן -->
-                            </tbody>
-                        </table>
-                    </div>
+                <div id="containers-screen" class="screen">
+                    <!-- תוכן מסך מכולות -->
                 </div>
-            </main>
+                <div id="materials-screen" class="screen">
+                     <!-- תוכן מסך חומרי בניין -->
+                </div>
+                <div id="status-screen" class="screen">
+                    <!-- תוכן מסך סטטוס הזמנה -->
+                </div>
+                <div id="history-screen" class="screen">
+                    <!-- תוכן מסך היסטוריית הזמנות -->
+                </div>
+            </div>
+
+            <nav id="tab-bar">
+                <a href="#home" class="tab-item ripple active" data-screen="home-screen">
+                    <i class="fas fa-home"></i>
+                    <span>ראשי</span>
+                </a>
+                <a href="#containers" class="tab-item ripple" data-screen="containers-screen">
+                    <i class="fas fa-dumpster"></i>
+                    <span>מכולות</span>
+                </a>
+                <a href="#materials" class="tab-item ripple" data-screen="materials-screen">
+                    <i class="fas fa-pallet"></i>
+                    <span>חומרים</span>
+                </a>
+                <a href="#status" class="tab-item ripple" data-screen="status-screen">
+                    <i class="fas fa-search-location"></i>
+                    <span>סטטוס</span>
+                </a>
+                <a href="#history" class="tab-item ripple" data-screen="history-screen">
+                    <i class="fas fa-history"></i>
+                    <span>היסטוריה</span>
+                </a>
+            </nav>
+        </main>
+        
+        <!-- טעינה ו-Modals -->
+        <div id="loader" class="loader-overlay hidden">
+            <div class="spinner"></div>
         </div>
-    </div>
 
-    <!-- Modal לפרטי מכולה -->
-    <div id="container-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="modal-title" class="text-xl font-bold"></h2>
-                <button class="close-modal-btn">&times;</button>
-            </div>
-            <div id="modal-body" class="space-y-3">
-                <!-- פרטים יוטענו כאן -->
-            </div>
+        <div id="toast" class="toast hidden">
+            <p id="toast-message"></p>
         </div>
     </div>
 
