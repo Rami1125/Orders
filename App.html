@@ -1,826 +1,278 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>מערכת ניהול פרימיום - ח. סבן</title>
-    <!-- 
-        Version 8.3 - Final Build
-        - Full refactor to use a modern card-based layout for mobile.
-        - Integration with updated backend logic and endpoints.
-        - Enhanced UI with Samsung S25 mockup, SVG icons, and smooth animations.
-    -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root { 
-            --background-start: #f8fafc; --background-end: #f1f5f9; 
-            --text-primary: #0f172a; --text-secondary: #64748b; 
-            --card-bg: #ffffff; --border-color: #e2e8f0; --accent-color: #2563eb; 
-            --edge-bg: rgba(255, 255, 255, 0.5);
-            --edge-border: rgba(255, 255, 255, 0.7);
-            --edge-icon-bg: rgba(255, 255, 255, 0.3);
-            --sunset-gradient: linear-gradient(135deg, #FFD200, #FF5B00);
-            --gloss-highlight: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
-        }
-        html.dark { 
-            --background-start: #020617; --background-end: #0f172a; 
-            --text-primary: #f8fafc; --text-secondary: #94a3b8; 
-            --card-bg: #1e293b; --border-color: #334155; 
-            --edge-bg: rgba(20, 20, 30, 0.5);
-            --edge-border: rgba(255, 255, 255, 0.1);
-            --edge-icon-bg: rgba(255, 255, 255, 0.05);
-            --sunset-gradient: linear-gradient(135deg, #FF8E4C, #C75000);
-            --gloss-highlight: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
-        }
-        body { 
-            font-family: 'Heebo', sans-serif; 
-            -webkit-font-smoothing: antialiased; 
-            -moz-osx-font-smoothing: grayscale; 
-            height: 100vh;
-            overflow: hidden;
-        }
-        .samsung-frame {
-            width: 100%; height: 100%; max-width: 440px; max-height: 950px; margin: auto;
-            border: 12px solid #1c1c1c; border-radius: 40px;
-            box-shadow: 0 20px 60px -10px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; overflow: hidden; position: relative; background-color: #000;
-        }
-        .samsung-screen { 
-            flex: 1; overflow: hidden; position: relative; 
-            background: linear-gradient(to bottom, var(--background-start), var(--background-end)); 
-            color: var(--text-primary); border-radius: 28px;
-            display: flex; flex-direction: column;
-        }
-        .camera-punch-hole {
-            position: absolute; top: 25px; left: 50%;
-            transform: translateX(-50%); width: 12px; height: 12px;
-            background: #111; border-radius: 50%; z-index: 100;
-        }
-        .view-container { display: none; }
-        .view-container.active { display: flex; flex: 1; flex-direction: column; }
-
-        .page, .modal, .wizard-step { display: none; }
-        .page.active, .wizard-step.active { display: block; animation: fadeInPage 0.5s; }
-        .modal.active { display: flex; animation: fadeInPage 0.3s; }
-        @keyframes fadeInPage { from { opacity: 0; } to { opacity: 1; } }
-
-        .nav-btn.active { color: var(--accent-color); font-weight: 700; }
-        
-        .edge-panel-container { position: absolute; top: 0; right: 0; bottom: 0; z-index: 50; pointer-events: none; }
-        .edge-panel { position: absolute; top: 50%; right: 8px; transform: translate(calc(100% - 20px), -50%); width: 80px; background: var(--edge-bg); border: 1px solid var(--edge-border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 20px; padding: 12px 8px; display: flex; flex-direction: column; gap: 12px; align-items: center; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); pointer-events: auto; }
-        .edge-btn { width: 60px; height: 60px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--edge-icon-bg); border: 1px solid transparent; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; position: relative; }
-        .edge-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; border-radius: 99px; background-color: #ef4444; color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; border: 2px solid var(--card-bg); transform: scale(0); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .edge-btn.highlight .edge-badge { transform: scale(1); }
-        
-        .card { background-color: var(--card-bg); border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); }
-        .nav-bar { background-color: var(--card-bg); border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .text-secondary { color: var(--text-secondary); }
-        .popup { transition: opacity 0.3s, transform 0.3s; }
-        .popup.show { opacity: 1; transform: translateY(0); }
-        .progress-bar { transition: width 0.5s ease-in-out; }
-        .form-luxury-bg { background-image: url('https://hetzroni.co.il/wp-content/uploads/2022/01/%D7%91%D7%9E%D7%97%D7%9C%D7%A7%D7%AA-%D7%90%D7%91%D7%99%D7%96%D7%A8%D7%99-%D7%91%D7%A0%D7%99%D7%99%D7%9F-%D7%95%D7%97%D7%95%D7%9E%D7%A8%D7%99-%D7%91%D7%A0%D7%99%D7%94-%D7%A9%D7%99%D7%A4%D7%95%D7%A6%D7%99%D7%9D-%D7%9C%D7%A7%D7%91%D7%9C%D7%A0%D7%99%D7%9D-%D7%91%D7%91%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D-%D7%95%D7%91%D7%91%D7%99%D7%AA-%D7%9C%D7%9C%D7%A7%D7%95%D7%97%D7%95%D7%AA-%D7%95%D7%9E%D7%A9%D7%9C%D7%95%D7%97%D7%99%D7%9D-%D7%91%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98-%D7%A9%D7%9C-%D7%97%D7%95%D7%9E%D7%A8%D7%99-%D7%91%D7%A0%D7%99%D7%99%D7%94-%D7%9E%D7%91%D7%A8%D7%A9%D7%95%D7%AA-%D7%95%D7%A8%D7%95%D7%9C%D7%A8%D7%99%D7%9D-%D7%9C%D7%A6%D7%91%D7%99%D7%A2%D7%94.jpg'); background-size: cover; background-position: center; }
-        .form-luxury-bg::before { content: ''; position: absolute; inset: 0; background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(2px); z-index: 1; }
-        html.dark .form-luxury-bg::before { background-color: rgba(0, 0, 0, 0.85); }
-        .form-content { position: relative; z-index: 2; }
-        .status-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
-        
-        /* Modal Fix */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal .card {
-            max-width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .modal-body-scroll {
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-
-        .item-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            transform: translateY(0);
-        }
-        .item-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-        }
-
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Client App — ממשק לקוח ח. סבן</title>
+  <!-- Tailwind + Fonts + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root{--primary:#2E8B57;--bg:#F3F8F4;--muted:#607D8B}
+    body{font-family:'Rubik',sans-serif;background:var(--bg);}
+    .card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
+    .logo{height:56px}
+    /* small mobile friendly styles */
+    @media(min-width:768px){.container{max-width:880px;margin:24px auto}}
+  </style>
 </head>
-<body class="bg-slate-800 flex items-center justify-center min-h-screen p-4">
+<body class="p-4">
+  <div class="container mx-auto">
+    <!-- LOGIN SCREEN -->
+    <section id="login-screen" class="card space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="https://i.postimg.cc/J7JGQYcT/image.jpg" class="logo rounded-md" alt="logo">
+        <h1 class="text-xl font-bold" id="app-title">ממשק לקוח — ח. סבן</h1>
+      </div>
+      <p class="text-sm text-[var(--muted)]">כניסה לממשק הלקוח לפי מספר טלפון. סיסמת ברירת מחדל: <strong>סבן</strong></p>
+      <div class="grid grid-cols-1 gap-2">
+        <input id="login-phone" placeholder="מספר טלפון (ללא +)" class="p-3 border rounded" />
+        <input id="login-password" placeholder="סיסמה" class="p-3 border rounded" value="סבן" />
+        <button id="btn-login" class="p-3 bg-[var(--primary)] text-white rounded font-semibold">התחבר</button>
+      </div>
+      <p id="login-msg" class="text-sm text-red-600 hidden"></p>
+    </section>
 
-    <div class="samsung-frame">
-        <div id="app-screen" class="samsung-screen">
-            <div class="camera-punch-hole"></div>
-            
-            <div class="edge-panel-container">
-                <div id="edge-panel" class="edge-panel">
-                     <button id="edge-orders" class="edge-btn"><span class="icon">📦</span><span class="label">הזמנות</span><span class="edge-badge">0</span></button>
-                     <button id="edge-containers" class="edge-btn"><span class="icon">🏗️</span><span class="label">מכולות</span><span class="edge-badge">0</span></button>
-                     <button id="edge-reports" class="edge-btn"><span class="icon">📊</span><span class="label">דוחות</span></button>
-                     <button id="edge-settings" class="edge-btn"><span class="icon">⚙️</span><span class="label">הגדרות</span></button>
-                </div>
-            </div>
-
-            <div id="login-view" class="view-container active">
-                <div id="login-page" class="flex-1 flex flex-col justify-center items-center bg-slate-200 dark:bg-slate-900 p-8">
-                    <div class="w-full max-w-sm text-center space-y-6">
-                        <img id="login-logo" src="https://placehold.co/150x50/1e293b/FFFFFF?text=H.SABAN" alt="Company Logo">
-                        <div class="relative inline-block">
-                             <img id="user-avatar" src="https://placehold.co/100x100/FFFFFF/CCCCCC?text=" alt="User Avatar" class="w-28 h-28 rounded-full mx-auto border-4 border-white dark:border-slate-700 shadow-lg">
-                             <div class="absolute -top-2 -right-2 text-4xl animate-wave">👋</div>
-                        </div>
-                        <h1 class="text-3xl font-bold text-slate-800 dark:text-slate-200">ברוכים הבאים</h1>
-                        <div><input id="phone-input" type="tel" placeholder="מספר טלפון" class="w-full bg-white/50 dark:bg-slate-800/50 border-b-2 border-slate-300 dark:border-slate-600 text-center text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 py-3 rounded-t-lg"></div>
-                        <div><input id="password-input" type="password" placeholder="סיסמה" class="w-full bg-white/50 dark:bg-slate-800/50 border-b-2 border-slate-300 dark:border-slate-600 text-center text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 py-3 rounded-b-lg mb-4"></div>
-                        <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-100 shadow-lg shadow-blue-500/30">כניסה</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="main-app-view" class="view-container">
-                 <header class="p-4 pt-10 flex justify-between items-center z-20 flex-shrink-0">
-                    <h1 id="header-title" class="text-xl font-bold"></h1>
-                    <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
-                        <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    </button>
-                </header>
-                <main class="flex-1 overflow-y-auto p-4 pt-0">
-                    <div id="home-page" class="page">
-                        <h2 class="text-2xl font-bold mb-4">ברוך שובך, <span id="user-name-display"></span></h2>
-                        <div class="card p-4 rounded-2xl mb-6">
-                             <h3 class="font-bold mb-2">סיכום מהיר</h3>
-                             <div class="grid grid-cols-2 gap-4 text-center">
-                                 <div><p class="text-2xl font-bold text-blue-600" id="summary-orders">0</p><p class="text-sm text-secondary">הזמנות פתוחות</p></div>
-                                 <div><p class="text-2xl font-bold text-green-600" id="summary-containers">0</p><p class="text-sm text-secondary">מכולות בשימוש</p></div>
-                             </div>
-                        </div>
-                        <h3 class="font-bold mb-4 text-lg">פעולות מהירות</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <button class="quick-action-btn card p-4 rounded-xl text-center aspect-square flex flex-col justify-center items-center shadow-sm hover:shadow-lg transition-shadow" data-action="new-order"><span class="text-4xl mb-2">📦</span><span class="font-semibold">הזמנה חדשה</span></button>
-                            <button class="nav-btn-link card p-4 rounded-xl text-center aspect-square flex flex-col justify-center items-center shadow-sm hover:shadow-lg transition-shadow" data-page="tinting-page"><span class="text-4xl mb-2">🎨</span><span class="font-semibold">הזמנת גיוון</span></button>
-                        </div>
-                        <div class="mt-8">
-                            <h3 class="font-bold mb-4 text-lg">חיפוש לקוח</h3>
-                            <input type="text" id="customer-search-input" placeholder="חפש לקוח לפי שם, טלפון או כתובת" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition">
-                            <div id="search-results" class="space-y-2 mt-4"></div>
-                        </div>
-                    </div>
-                    <div id="containers-page" class="page"></div>
-                    <div id="materials-page" class="page"></div>
-                    <div id="tinting-page" class="page">
-                        <p class="text-secondary mb-4">בחר את הגוון הרצוי מהמניפה. תוכל לסנן לפי מותג.</p>
-                        <div class="flex gap-2 mb-4">
-                            <button class="brand-filter-btn flex-1 p-2 rounded-lg border-2 border-blue-500 bg-blue-500 text-white" data-brand="all">הכל</button>
-                            <button class="brand-filter-btn flex-1 p-2 rounded-lg border-2 border-gray-300 dark:border-gray-600" data-brand="נירלט">נירלט</button>
-                            <button class="brand-filter-btn flex-1 p-2 rounded-lg border-2 border-gray-300 dark:border-gray-600" data-brand="טמבור">טמבור</button>
-                        </div>
-                        <div id="color-swatch-grid" class="grid grid-cols-3 gap-4"></div>
-                    </div>
-                    <div id="order-wizard-page" class="page absolute inset-0 form-luxury-bg">
-                         <div class="form-content h-full flex flex-col p-4">
-                            <div class="mb-6"><div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 relative"><div id="order-progress-bar" class="bg-blue-600 h-4 rounded-full progress-bar flex items-center justify-center text-white text-xs font-bold" style="width: 33%">33%</div></div></div>
-                            <div class="flex-1 overflow-y-auto">
-                                <div id="order-step-1" class="wizard-step active"><h2 class="text-3xl font-bold mb-2">שלב 1: למי ההזמנה?</h2><p class="text-secondary mb-6">בחר את הפרויקט או הכתובת למשלוח.</p><div class="space-y-6"><div><label class="font-semibold mb-2 block">בחירת פרויקט</label><input type="text" placeholder="התחל להקליד שם פרויקט..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"></div><div><label class="font-semibold mb-2 block">כתובת</label><input type="text" value="אנקורים 2, רמת גן" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"></div></div></div>
-                                <div id="order-step-2" class="wizard-step"><h2 class="text-3xl font-bold mb-2">שלב 2: מה להביא?</h2><p class="text-secondary mb-6">הוסף פריטים וצרף קובץ במידת הצורך.</p><div class="space-y-6"><p class="text-center text-secondary py-8">מנגנון הוספת פריטים יופיע כאן</p><div><label for="file-upload" class="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"><span>📷</span><span>הוסף תמונה / קובץ</span></label><input id="file-upload" type="file" class="hidden"><p id="file-name" class="text-sm text-secondary mt-2 text-center"></p></div></div></div>
-                                <div id="order-step-3" class="wizard-step"><h2 class="text-3xl font-bold mb-2">שלב 3: סיכום ושליחה</h2><p class="text-secondary mb-6">בדוק שהכל נכון לפני השליחה.</p><div class="space-y-6"><div class="card p-4 rounded-lg min-h-[200px]"><p class="text-center text-secondary">סיכום ההזמנה יוצג כאן</p></div></div></div>
-                            </div>
-                             <div class="flex gap-4 mt-6"><button id="order-back-btn" class="w-1/3 bg-gray-300 dark:bg-gray-600 font-bold py-3 rounded-lg" onclick="goToOrderStep('back')">הקודם</button><button id="order-next-btn" class="w-2/3 bg-blue-500 text-white font-bold py-3 rounded-lg" onclick="goToOrderStep('next')">הבא</button><button id="order-send-btn" class="w-2/3 bg-green-500 text-white font-bold py-3 rounded-lg hidden">אישור ושליחה</button></div>
-                        </div>
-                    </div>
-                    <div id="reports-page" class="page"><div class="card p-4 rounded-xl"><h3 class="font-bold mb-2">הזמנות ב-7 הימים האחרונים</h3><div class="h-64"><canvas id="ordersChart"></canvas></div></div></div>
-                    <div id="profile-page" class="page"><div class="space-y-6"><div><h3 class="font-bold mb-4 text-lg">עדכון פרטים</h3><div class="card p-4 rounded-xl space-y-4"><div><label class="text-sm font-medium text-secondary">שם מלא</label><input type="text" value="רמי סבן" class="mt-1 w-full p-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg"></div><div><label class="text-sm font-medium text-secondary">טלפון</label><input type="tel" value="050-1234567" class="mt-1 w-full p-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg"></div><button class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">שמירה</button></div></div><div><h3 class="font-bold mb-4 text-lg">ניהול פרויקטים</h3><div class="card p-4 rounded-xl"><ul class="space-y-2"><li class="flex justify-between items-center"><span>אלנבי על הים</span> <button class="text-xs text-red-500">הסר</button></li><li class="flex justify-between items-center"><span>פרויקט Gindi ת"א</span> <button class="text-xs text-red-500">הסר</button></li></ul><button class="mt-4 w-full bg-green-600 text-white font-bold py-2 rounded-lg">הוסף פרויקט חדש</button></div></div></div></div>
-                </main>
-                <nav id="bottom-nav" class="nav-bar flex justify-around text-secondary text-xs z-30 rounded-b-[28px] py-2 flex-shrink-0"></nav>
-            </div>
-            
-            <div id="popup-container" class="absolute bottom-24 left-4 right-4 space-y-2 z-[999] pointer-events-none"></div>
-            <div id="modal-container">
-                <div id="paint-order-modal" class="modal items-center justify-center p-4 z-[1000] fixed inset-0 bg-black/50">
-                    <div class="card rounded-lg p-6 w-full max-w-sm relative">
-                        <button data-action="close-modal" class="absolute top-2 left-2 p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-200">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                        <div id="paint-order-header" class="text-center mb-4 pb-4 border-b border-border-color"></div>
-                        <h3 class="text-lg font-semibold mb-4 text-center">פרטי הזמנת גיוון</h3>
-                        <div class="space-y-4">
-                            <select id="paint-branch" class="w-full p-3 border-2 rounded-lg"><option value="">בחר סניף</option><option value="התלמיד">סניף התלמיד</option><option value="החרש">סניף החרש</option></select>
-                            <div><input id="paint-liters" type="number" min="1" max="18" placeholder="כמות (1-18 ליטר)" class="w-full p-3 border-2 rounded-lg"><p class="text-xs text-secondary mt-1">כפוף לזמינות במלאי</p></div>
-                            <button id="send-tint-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg">שליחת הזמנה</button>
-                            <button data-action="close-modal" class="w-full p-2 mt-2 text-secondary">ביטול</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Modal for Customer Profile -->
-                <div id="customer-profile-modal" class="modal">
-                    <div class="card rounded-lg p-6 w-full max-w-3xl relative flex flex-col">
-                        <button data-action="close-modal" class="absolute top-2 left-2 p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-200">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                        <h2 id="customer-profile-name" class="text-2xl font-bold mb-4 text-center">פרופיל לקוח</h2>
-                        <div id="customer-profile-body" class="flex-1 overflow-y-auto space-y-6">
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                                <div class="card p-4 rounded-xl">
-                                    <p class="text-2xl font-bold text-gray-800 dark:text-gray-200" id="profile-total-orders">0</p>
-                                    <p class="text-xs text-secondary">הזמנות כוללות</p>
-                                </div>
-                                <div class="card p-4 rounded-xl">
-                                    <p class="text-2xl font-bold text-blue-600" id="profile-open-orders">0</p>
-                                    <p class="text-xs text-secondary">הזמנות פתוחות</p>
-                                </div>
-                                <div class="card p-4 rounded-xl">
-                                    <p class="text-2xl font-bold text-red-600" id="profile-overdue-orders">0</p>
-                                    <p class="text-xs text-secondary">הזמנות חורגות</p>
-                                </div>
-                                <div class="card p-4 rounded-xl">
-                                    <p class="text-xs font-bold text-gray-800 dark:text-gray-200 mt-2" id="profile-last-order-date">N/A</p>
-                                    <p class="text-xs text-secondary">הזמנה אחרונה</p>
-                                </div>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-lg mb-2">מכולות פעילות</h3>
-                                <div id="profile-containers-list" class="space-y-2">
-                                    <!-- Container items will be dynamically inserted here -->
-                                </div>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-lg mb-2">היסטוריית הזמנות</h3>
-                                <div id="profile-orders-list" class="space-y-2">
-                                    <!-- Order history items will be dynamically inserted here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- CLIENT DASHBOARD (hidden until auth) -->
+    <section id="client-app" class="hidden space-y-4">
+      <header class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img id="client-avatar" src="https://i.postimg.cc/2y9g2zYx/avatar.png" class="w-12 h-12 rounded-full" alt="avatar">
+          <div>
+            <div id="client-name" class="font-bold"></div>
+            <div id="client-phone" class="text-sm text-[var(--muted)]"></div>
+          </div>
         </div>
+        <div class="flex items-center gap-2">
+          <button id="btn-new-order" class="btn bg-[var(--primary)] text-white p-2 rounded">הזמן מכולה חדשה</button>
+          <button id="btn-logout" class="p-2 border rounded">התנתק</button>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="card">
+          <h3 class="font-semibold">מכולות בשירות</h3>
+          <div id="kpi-containers" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="card">
+          <h3 class="font-semibold">הזמנות פתוחות</h3>
+          <div id="kpi-open" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="card">
+          <h3 class="font-semibold">הודעות</h3>
+          <div id="kpi-notifs" class="text-3xl font-bold mt-2">0</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="card" id="client-orders-card">
+          <h3 class="font-semibold mb-2">רשימת ההזמנות שלך</h3>
+          <div id="orders-list" class="space-y-2 max-h-72 overflow-auto"></div>
+        </div>
+
+        <div class="card" id="map-card">
+          <h3 class="font-semibold mb-2">מפת מיקום והסעות</h3>
+          <div id="client-map" style="height:320px;background:#eef;display:flex;align-items:center;justify-content:center;color:#7a7a7a">מפה תוצג פה</div>
+        </div>
+      </div>
+
+      <div class="card" id="notifications-panel">
+        <h3 class="font-semibold mb-2">לוח הודעות</h3>
+        <div id="notice-list" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- ORDER FORM MODAL (simple) -->
+    <div id="order-modal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4">
+      <div class="bg-white rounded p-4 w-full max-w-md">
+        <h3 class="font-bold mb-2">טופס הזמנת מכולה</h3>
+        <div class="space-y-2">
+          <select id="order-project" class="p-2 border rounded w-full"></select>
+          <input id="order-address" placeholder="כתובת / לינק Waze" class="p-2 border rounded w-full" />
+          <input id="order-phone-contact" placeholder="טלפון איש קשר" class="p-2 border rounded w-full" />
+          <select id="order-action-type" class="p-2 border rounded w-full"><option>הורדה</option><option>העלאה</option><option>החלפה</option><option>שירות מנוף</option></select>
+          <textarea id="order-notes" placeholder="הערות" class="p-2 border rounded w-full"></textarea>
+          <div class="flex gap-2 justify-end">
+            <button id="order-cancel" class="p-2 border rounded">ביטול</button>
+            <button id="order-submit" class="p-2 bg-[var(--primary)] text-white rounded">שלח הזמנה</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbySlBiMdN2PyqG151h_urG7Hp_yz-v2XBhT9WCdrE7WEWKYAOHhJSIXeqZLRth5DvR_DA/exec';
-            
-            const loginView = document.getElementById('login-view');
-            const mainAppView = document.getElementById('main-app-view');
-            const loginBtn = document.getElementById('login-btn');
-            const navContainer = document.getElementById('bottom-nav');
-            const headerTitle = document.getElementById('header-title');
-            const themeToggleBtn = document.getElementById('theme-toggle-btn');
-            const pages = document.querySelectorAll('.page');
-            const popupContainer = document.getElementById('popup-container');
-            const sendTintBtn = document.getElementById('send-tint-btn');
-            const customerSearchInput = document.getElementById('customer-search-input');
-            const searchResultsContainer = document.getElementById('search-results');
+  </div>
 
-            let ordersChartInstance = null;
-            const orderWizardState = { currentStep: 1, totalSteps: 3 };
-            let currentPaintOrder = {};
-            let appData = { colors: [] };
-            let currentUser = {};
-            let pageDataCache = {}; // Cache for lazy-loaded pages
+  <script>
+    // ----------------- CONFIG -----------------
+    const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxiS3wXwXCyh8xM1EdTiwXy0T-UyBRQgfrnRRis531lTxmgtJIGawfsPeetX5nVJW3V/exec';
+    // default whatsapp number
+    const WHATSAPP_NUMBER = '972508860896';
 
-            // API Call with exponential backoff and loading indicator
-            async function apiCall(action, params = {}, retries = 0) {
-                const formData = new FormData();
-                formData.append('action', action);
-                for (const key in params) {
-                    if (typeof params[key] === 'object' && params[key] !== null) {
-                        formData.append(key, JSON.stringify(params[key]));
-                    } else {
-                        formData.append(key, params[key]);
-                    }
-                }
-                
-                try {
-                    showLoadingSpinner();
-                    const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: formData });
-                    hideLoadingSpinner();
+    // ----------------- STATE ------------------
+    let client = null; // {phone,name,id,projects:[]}
+    let clientOrders = [];
 
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    
-                    if (result.status === 'error') {
-                        if (result.message?.includes('Service invoked too many times') && retries < 5) {
-                            const delay = Math.pow(2, retries) * 1000;
-                            console.warn(`API rate limit exceeded, retrying in ${delay}ms...`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            return apiCall(action, params, retries + 1);
-                        }
-                        throw new Error(result.message);
-                    }
-                    return result.data;
+    // ----------------- HELPERS ---------------
+    const el = id => document.getElementById(id);
+    function show(sel){el(sel).classList.remove('hidden')}
+    function hide(sel){el(sel).classList.add('hidden')}
 
-                } catch (error) {
-                    hideLoadingSpinner();
-                    console.error('API Call Error:', action, error);
-                    showPopup(error.message?.includes('Failed to fetch') ? 'שגיאת רשת.' : `שגיאה בפעולה: ${error.message}`);
-                    throw error;
-                }
-            }
-            
-            // Helper function to show and hide a loading spinner
-            function showLoadingSpinner() {
-                let spinner = document.getElementById('loading-spinner');
-                if (!spinner) {
-                    spinner = document.createElement('div');
-                    spinner.id = 'loading-spinner';
-                    spinner.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[2000]';
-                    spinner.innerHTML = `<div class="w-12 h-12 rounded-full border-4 border-t-4 border-blue-500 animate-spin"></div>`;
-                    document.body.appendChild(spinner);
-                }
-                spinner.style.display = 'flex';
-            }
+    // ----------------- AUTH ------------------
+    document.getElementById('btn-login').addEventListener('click', async ()=>{
+      const phone = el('login-phone').value.trim();
+      const password = el('login-password').value || 'סבן';
+      if(!phone){el('login-msg').textContent='הכנס טלפון';el('login-msg').classList.remove('hidden');return}
+      el('login-msg').classList.add('hidden');
+      try{
+        const res = await api('auth', { phone, password });
+        if(res && res.length>0){
+          client = res[0];
+          onLoginSuccess();
+        } else {
+          el('login-msg').textContent='לא נמצאו משתמשים עם פרטי כניסה אלה';el('login-msg').classList.remove('hidden');
+        }
+      }catch(e){el('login-msg').textContent='שגיאה בתקשורת';el('login-msg').classList.remove('hidden');}
+    });
 
-            function hideLoadingSpinner() {
-                const spinner = document.getElementById('loading-spinner');
-                if (spinner) {
-                    spinner.style.display = 'none';
-                }
-            }
+    function onLoginSuccess(){
+      hide('login-screen');
+      show('client-app');
+      el('client-name').textContent = client['שם לקוח'] || client.name || 'לקוח';
+      el('client-phone').textContent = client['טלפון לקוח'] || client.phone;
+      // avatar placeholder
+      el('client-avatar').src = client.avatar || 'https://i.postimg.cc/2y9g2zYx/avatar.png';
+      loadClientData();
+    }
 
-            // Helper function to format date defensively
-            function formatDate(dateString) {
-                if (!dateString) return 'N/A';
-                const date = new Date(dateString);
-                return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            }
+    document.getElementById('btn-logout').addEventListener('click', ()=>{client=null;clientOrders=[];hide('client-app');show('login-screen');});
 
-            function showPopup(message, duration = 3000) {
-                const popup = document.createElement('div');
-                popup.className = 'popup bg-slate-800 text-white text-center py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-4 pointer-events-auto';
-                popup.textContent = message;
-                popupContainer.appendChild(popup);
-                setTimeout(() => { popup.classList.add('show'); }, 10);
-                setTimeout(() => { popup.classList.remove('show'); setTimeout(() => popup.remove(), 300); }, duration);
-            }
-            
-            function applySavedTheme() {
-                if (localStorage.getItem('theme') === 'dark') { document.documentElement.classList.add('dark'); } 
-                else { document.documentElement.classList.remove('dark'); }
-            }
+    // ----------------- API WRAPPER -------------
+    async function api(action, params={}){
+      const url = new URL(SCRIPT_WEB_APP_URL);
+      url.searchParams.append('action', action);
+      Object.keys(params).forEach(k=>url.searchParams.append(k, params[k]));
+      const r = await fetch(url.toString());
+      if(!r.ok) throw new Error('server');
+      const data = await r.json();
+      if(!data.success) throw new Error(data.message || 'api error');
+      return data.data;
+    }
 
-            function updateSummariesAndBadges(data) {
-                if (!data) return;
-                const openOrders = data.ordersCount ?? 0;
-                const activeContainers = data.containersCount ?? 0;
+    // ----------------- DATA LOAD ----------------
+    async function loadClientData(){
+      try{
+        // 1) projects (from sheet column Projects linked to client phone)
+        const projects = await api('getProjectsByPhone',{ phone: client['טלפון לקוח'] || client.phone });
+        client.projects = projects || [];
+        // populate project selector
+        const sel = el('order-project'); sel.innerHTML='';
+        client.projects.forEach(p=>{const opt=document.createElement('option');opt.value=p.projectName;opt.textContent=p.projectName + (p.projectAddress? ' — '+p.projectAddress:'');sel.appendChild(opt)});
 
-                const updateButton = (id, value) => {
-                    const btn = document.getElementById(id);
-                    if (!btn) return;
-                    const badge = btn.querySelector('.edge-badge');
-                    if (badge && value > 0) { badge.textContent = value; btn.classList.add('highlight'); } 
-                    else if (badge) { btn.classList.remove('highlight'); }
-                };
-                updateButton('edge-orders', openOrders);
-                updateButton('edge-containers', activeContainers);
-                document.getElementById('summary-orders').textContent = openOrders;
-                document.getElementById('summary-containers').textContent = activeContainers;
-            }
+        // 2) orders
+        clientOrders = await api('listByPhone',{ phone: client['טלפון לקוח'] || client.phone });
+        renderClientOrders();
 
-            async function handleLogin() {
-                loginBtn.disabled = true;
-                loginBtn.textContent = 'מתחבר...';
-                try {
-                    const phone = document.getElementById('phone-input').value;
-                    const password = document.getElementById('password-input').value;
-                    
-                    const loginResult = await apiCall('login', { phone, password });
-                    currentUser = loginResult;
-                    
-                    loginView.classList.remove('active');
-                    mainAppView.classList.add('active');
-                    
-                    applySavedTheme();
-                    showPopup('טוען נתונים...');
-                    
-                    const summaryData = await apiCall('getDashboardSummary');
-                    updateSummariesAndBadges(summaryData);
-                    document.getElementById('user-name-display').textContent = currentUser.name ?? "משתמש";
-                    
-                    switchPage('home-page');
-                    showPopup(`ברוך השב, ${currentUser.name}!`);
+        // 3) KPIs
+        el('kpi-containers').textContent = countUniqueContainers(clientOrders);
+        el('kpi-open').textContent = clientOrders.filter(o=> o['סטטוס'] !== 'סגור').length;
 
-                } catch (error) {
-                    showPopup('פרטי ההתחברות שגויים');
-                } finally {
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'כניסה';
-                }
-            }
-            
-            // Function to display a full customer profile (now fetching data dynamically)
-            async function showCustomerProfile(customerData) {
-                const modal = document.getElementById('customer-profile-modal');
-                if (!customerData?.name) return;
+        // 4) notifications
+        const notes = await api('getNoticesForPhone',{ phone: client['טלפון לקוח'] || client.phone });
+        renderNotices(notes || []);
+      }catch(e){console.error(e);alert('שגיאה בטעינת נתונים')}
+    }
 
-                document.getElementById('customer-profile-name').textContent = `פרופיל לקוח: ${customerData.name}`;
-                document.getElementById('profile-total-orders').textContent = '...';
-                document.getElementById('profile-open-orders').textContent = '...';
-                document.getElementById('profile-overdue-orders').textContent = '...';
-                document.getElementById('profile-last-order-date').textContent = '...';
-                document.getElementById('profile-containers-list').innerHTML = '<p class="text-center text-secondary mt-8">טוען מכולות...</p>';
-                document.getElementById('profile-orders-list').innerHTML = '<p class="text-center text-secondary mt-8">טוען היסטוריה...</p>';
+    function countUniqueContainers(orders){
+      const set = new Set();
+      orders.forEach(o=>{
+        const list = String(o['מספר מכולה ירדה']||'').split(',').map(x=>x.trim()).filter(Boolean);
+        list.forEach(x=>set.add(x));
+      });
+      return set.size;
+    }
 
-                openModal('customer-profile-modal');
+    function renderClientOrders(){
+      const container = el('orders-list'); container.innerHTML='';
+      if(!clientOrders || clientOrders.length===0){container.innerHTML='<div class="text-sm text-[var(--muted)]">אין הזמנות</div>'; return}
+      clientOrders.sort((a,b)=> new Date(b['תאריך הזמנה']) - new Date(a['תאריך הזמנה'])).forEach(o=>{
+        const div = document.createElement('div'); div.className='p-2 border rounded flex justify-between items-center';
+        div.innerHTML = `<div><div class="font-semibold">${escapeHtml(o['תעודה']||'')}${o['כתובת']? ' — '+escapeHtml(o['כתובת']):''}</div><div class="text-sm text-[var(--muted)]">${escapeHtml(o['סוג פעולה']||'')} — ${escapeHtml(o['סטטוס']||'')}</div></div><div class="flex items-center gap-2"><button class="p-2 border rounded text-sm" onclick='openOrderDetails(${JSON.stringify(o).replaceAll("'","\\'")})'>פירוט</button></div>`;
+        container.appendChild(div);
+      });
+    }
 
-                try {
-                    const profileData = await apiCall('getCustomerProfile', { customerName: customerData.name });
-                    if (!profileData) throw new Error('No profile data');
+    function escapeHtml(s){return String(s||'').replace(/[&<>'"]/g,t=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[t]));}
 
-                    document.getElementById('profile-total-orders').textContent = profileData.totalOrders ?? 0;
-                    document.getElementById('profile-open-orders').textContent = profileData.openOrders ?? 0;
-                    document.getElementById('profile-overdue-orders').textContent = profileData.overdueContainers ?? 0;
-                    document.getElementById('profile-last-order-date').textContent = formatDate(profileData.lastOrderDate);
+    window.openOrderDetails = function(order){
+      // open small detail modal or new window with Waze parse + map + actions
+      const text = `תעודה: ${order['תעודה'] || ''}\nפעולה: ${order['סוג פעולה']||''}\nמצב: ${order['סטטוס']||''}\nכתובת: ${order['כתובת']||''}`;
+      alert(text);
+    }
 
-                    const containersList = document.getElementById('profile-containers-list');
-                    containersList.innerHTML = '';
-                    if (profileData.containers?.length > 0) {
-                        profileData.containers.forEach(c => {
-                            const isOverdue = c.isOverdue;
-                            const statusColor = isOverdue ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-                            const statusText = isOverdue ? 'חורגת 🚨' : 'פעילה';
-                            containersList.innerHTML += `
-                                <div class="card p-3 rounded-lg flex justify-between items-center bg-gray-50 dark:bg-gray-800">
-                                    <p class="text-sm font-bold">מכולה ${c.containerId ?? 'N/A'}</p>
-                                    <p class="text-xs text-secondary">${c.site ?? 'N/A'}</p>
-                                    <div class="text-left">
-                                        <p class="text-xs text-secondary">ימי שכירות: ${c.daysPassed ?? 'N/A'}</p>
-                                        <p class="text-xs text-${isOverdue ? 'red' : 'green'}-600 font-bold">${statusText}</p>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        containersList.innerHTML = '<p class="text-secondary text-center">אין מכולות פעילות כרגע.</p>';
-                    }
+    // ----------------- NOTICES ----------------
+    function renderNotices(notes){
+      el('notice-list').innerHTML='';
+      notes.forEach(n=>{
+        const row = document.createElement('div'); row.className='p-2 border rounded flex justify-between items-center';
+        row.innerHTML = `<div><div class="font-semibold">${escapeHtml(n.title||'הודעה')}</div><div class="text-sm text-[var(--muted)]">${escapeHtml(n.message||'')}</div></div><div><button class="p-2" onclick='markNoticeRead(${JSON.stringify(n).replaceAll("'","\\'")})'>×</button></div>`;
+        el('notice-list').appendChild(row);
+      });
+      el('kpi-notifs').textContent = notes.length;
+    }
 
-                    const ordersList = document.getElementById('profile-orders-list');
-                    ordersList.innerHTML = '';
-                    if (profileData.orders?.length > 0) {
-                        profileData.orders.forEach(order => {
-                            ordersList.innerHTML += `
-                                <div class="card p-3 rounded-lg flex justify-between items-center bg-gray-50 dark:bg-gray-800">
-                                    <p class="text-sm font-bold">הזמנה #${order.orderId ?? 'N/A'}</p>
-                                    <p class="text-xs text-secondary">${formatDate(order.timestamp)}</p>
-                                    <span class="status-badge bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">${order.status ?? 'N/A'}</span>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        ordersList.innerHTML = '<p class="text-secondary text-center">אין היסטוריית הזמנות.</p>';
-                    }
-                } catch (error) {
-                    document.getElementById('customer-profile-body').innerHTML = `<p class="text-red-500 text-center mt-8">שגיאה בטעינת הפרופיל.</p>`;
-                }
-            }
+    async function markNoticeRead(n){
+      try{ await api('markNoticeRead',{ id: n.id, phone: client['טלפון לקוח'] || client.phone });
+        loadClientData();
+      }catch(e){console.error(e)}
+    }
 
+    // ----------------- ORDER CREATION ----------------
+    document.getElementById('btn-new-order').addEventListener('click', ()=>{show('order-modal')});
+    document.getElementById('order-cancel').addEventListener('click', ()=>{hide('order-modal')});
+    document.getElementById('order-submit').addEventListener('click', async ()=>{
+      const payload = {
+        phone: client['טלפון לקוח'] || client.phone,
+        clientName: client['שם לקוח'] || client.name,
+        project: el('order-project').value,
+        address: el('order-address').value,
+        contactPhone: el('order-phone-contact').value,
+        actionType: el('order-action-type').value,
+        notes: el('order-notes').value
+      };
+      try{
+        await api('createOrder', payload);
+        hide('order-modal');
+        await loadClientData();
+        // optionally send WA share link
+        const waText = `הזמנה חדשה מ${payload.clientName} - ${payload.actionType} - ${payload.address}`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`,'_blank');
+      }catch(e){alert('שגיאה בשליחת ההזמנה')}
+    });
 
-            async function renderOrdersPage() {
-                const container = document.getElementById('materials-page');
-                container.innerHTML = '<h3 class="font-bold mb-4 text-lg">היסטוריית הזמנות</h3><p class="text-center text-secondary mt-8">טוען הזמנות...</p>';
-                if (pageDataCache.orders) {
-                    renderOrdersTable(pageDataCache.orders);
-                    return;
-                }
-                try {
-                    const orders = await apiCall('getOrders');
-                    pageDataCache.orders = orders;
-                    renderOrdersTable(orders);
-                } catch (e) {
-                    container.innerHTML = '<p class="text-red-500 text-center mt-8">שגיאה בטעינת הזמנות.</p>';
-                }
-            }
+    // ----------------- WAZE / SHARED LINK PARSE (חינמי) ----------------
+    // example Waze share link contains encoded info — we parse query params and show to client
+    function parseWazeShare(url){
+      try{
+        const u = new URL(url);
+        const sd = u.searchParams.get('sd') || u.searchParams.get('s');
+        // best-effort: show url and label
+        return { raw: url, label: u.pathname + (sd? ' / '+sd:'') };
+      }catch(e){return null}
+    }
 
-            function renderOrdersTable(orders) {
-                const container = document.getElementById('materials-page');
-                if (!orders || orders.length === 0) {
-                    container.innerHTML = '<h3 class="font-bold mb-4 text-lg">היסטוריית הזמנות</h3><p class="text-secondary text-center mt-8">לא נמצאו הזמנות.</p>';
-                    return;
-                }
-                const statusStyles = {
-                    'חדשה': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                    'בטיפול': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                    'סופקה': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                    'מבוטלת': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                };
-                const ordersHtml = `
-                    <div class="space-y-4">
-                        ${orders.map(order => `
-                            <div class="item-card flex flex-col items-start gap-2">
-                                <span class="status-badge ${statusStyles[order.status] || ''} self-end">${order.status ?? 'N/A'}</span>
-                                <p class="text-sm font-bold">הזמנה #${order.orderId ?? 'N/A'}</p>
-                                <p class="text-xs text-secondary">לקוח: ${order.customerName ?? 'N/A'}</p>
-                                <p class="text-xs text-secondary">תאריך: ${formatDate(order.timestamp)}</p>
-                                <p class="text-base font-semibold">סה"כ: ₪${order.totalAmount ?? 0}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                container.innerHTML = `<h3 class="font-bold mb-4 text-lg">היסטוריית הזמנות</h3>${ordersHtml}`;
-            }
+    // ----------------- MAP (קישור מהיר) ----------------
+    // For a free, light-weight map: we can embed OSM / Leaflet in a later step.
 
+    // ----------------- INIT ----------------
+    // small demo: prefill phone if previously used
+    if(localStorage.getItem('clientPhone')) el('login-phone').value = localStorage.getItem('clientPhone');
 
-            async function renderContainersPage() {
-                 const container = document.getElementById('containers-page');
-                 container.innerHTML = '<h3 class="font-bold mb-4 text-lg">סטטוס מכולות</h3><p class="text-center text-secondary mt-8">טוען מכולות...</p>';
-                 if (pageDataCache.containers) {
-                    renderContainersList(pageDataCache.containers);
-                    return;
-                }
-                try {
-                    const containers = await apiCall('getContainers');
-                    pageDataCache.containers = containers;
-                    renderContainersList(containers);
-                } catch (e) {
-                     container.innerHTML = '<p class="text-red-500 text-center mt-8">שגיאה בטעינת מכולות.</p>';
-                }
-            }
+    // ----------------- ON LOAD ----------------
+    document.addEventListener('DOMContentLoaded', ()=>{
+      // keep minimal
+    });
 
-            function renderContainersList(containers) {
-                 const container = document.getElementById('containers-page');
-                if (!containers || containers.length === 0) {
-                    container.innerHTML = '<h3 class="font-bold mb-4 text-lg">סטטוס מכולות</h3><p class="text-secondary text-center mt-8">לא נמצאו מכולות פעילות.</p>';
-                    return;
-                }
-                const containersHtml = `
-                    <div class="space-y-4">
-                        ${containers.map(c => {
-                            const isOverdue = c.isOverdue;
-                            const statusColor = isOverdue ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-                            const statusText = isOverdue ? 'חורגת 🚨' : 'פעילה';
-                            return `
-                                <div class="item-card flex flex-col items-start gap-2">
-                                    <span class="status-badge ${statusColor} self-end">${statusText}</span>
-                                    <p class="text-sm font-bold">מכולה ${c.containerId ?? 'N/A'}</p>
-                                    <p class="text-xs text-secondary">אתר: ${c.site ?? 'N/A'}</p>
-                                    <p class="text-xs text-secondary">יציאה: ${formatDate(c.dateOut)}</p>
-                                    <p class="text-base font-semibold">ימי שכירות: ${c.daysPassed ?? 'N/A'}</p>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-                 container.innerHTML = `<h3 class="font-bold mb-4 text-lg">סטטוס מכולות</h3>${containersHtml}`;
-            }
-            
-            async function renderOrdersChart() {
-                const ctx = document.getElementById('ordersChart');
-                if (!ctx) return;
-                
-                let chartData;
-                if (pageDataCache.reports) {
-                    chartData = pageDataCache.reports;
-                } else {
-                    chartData = await apiCall('getWeeklyOrdersSummary');
-                    pageDataCache.reports = chartData;
-                }
-
-                if (ordersChartInstance) ordersChartInstance.destroy();
-                const isDark = document.documentElement.classList.contains('dark');
-                
-                const labels = chartData?.map(d => formatDate(d.date)) ?? [];
-                const data = chartData?.map(d => d.totalAmount) ?? [];
-
-                ordersChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels.length ? labels : ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'],
-                        datasets: [{
-                            label: 'הזמנות',
-                            data: data.length ? data : [0, 0, 0, 0, 0, 0, 0],
-                            backgroundColor: 'rgba(37, 99, 235, 0.6)',
-                            borderColor: 'rgba(37, 99, 235, 1)',
-                            borderWidth: 1,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
-                                ticks: { color: isDark ? '#FFF' : '#000' }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { color: isDark ? '#FFF' : '#000' }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false }
-                        }
-                    }
-                });
-            }
-
-            function switchPage(pageId) {
-                pages.forEach(page => page.classList.remove('active'));
-                const newPage = document.getElementById(pageId);
-                if (newPage) newPage.classList.add('active');
-                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.page === pageId));
-                const pageTitles = {'home-page': 'דף הבית', 'containers-page': 'מכולות', 'materials-page': 'היסטוריית הזמנות', 'tinting-page': 'מניפת גוונים', 'order-wizard-page': 'הזמנה חדשה', 'reports-page': 'דוחות', 'profile-page': 'פרופיל אישי'};
-                headerTitle.textContent = pageTitles[pageId] ?? 'ח. סבן';
-                
-                if (pageId === 'materials-page') renderOrdersPage();
-                if (pageId === 'containers-page') renderContainersPage();
-                if (pageId === 'reports-page') renderOrdersChart();
-                if (pageId === 'tinting-page') renderColorSwatches();
-            }
-
-            window.goToOrderStep = function(direction) {
-                let { currentStep, totalSteps } = orderWizardState;
-                let nextStep = currentStep;
-                if (direction === 'next' && currentStep < totalSteps) nextStep++;
-                else if (direction === 'back' && currentStep > 1) nextStep--;
-                if (nextStep !== currentStep) {
-                    orderWizardState.currentStep = nextStep;
-                    updateOrderWizardView();
-                }
-            }
-
-            function updateOrderWizardView() {
-                const { currentStep, totalSteps } = orderWizardState;
-                document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
-                document.getElementById(`order-step-${currentStep}`).classList.add('active');
-                const percentage = Math.round((currentStep / totalSteps) * 100);
-                const progressBar = document.getElementById('order-progress-bar');
-                progressBar.style.width = `${percentage}%`;
-                progressBar.textContent = `${percentage}%`;
-                document.getElementById('order-back-btn').classList.toggle('hidden', currentStep === 1);
-                document.getElementById('order-next-btn').classList.toggle('hidden', currentStep === totalSteps);
-                document.getElementById('order-send-btn').classList.toggle('hidden', currentStep !== totalSteps);
-            }
-
-            function openModal(modalId) { document.getElementById(modalId)?.classList.add('active'); }
-            function closeModal(modalId) { document.getElementById(modalId)?.classList.remove('active'); }
-
-            function renderColorSwatches(brandFilter = 'all') {
-                const grid = document.getElementById('color-swatch-grid');
-                grid.innerHTML = '';
-                const filteredColors = brandFilter === 'all' ? (appData.colors ?? []) : (appData.colors ?? []).filter(c => c.מותג === brandFilter);
-                if (!filteredColors || filteredColors.length === 0) {
-                    grid.innerHTML = `<p class="col-span-3 text-center text-secondary">לא נמצאו גוונים.</p>`;
-                    return;
-                }
-                filteredColors.forEach(color => {
-                    const swatch = document.createElement('div');
-                    swatch.className = 'card rounded-lg text-center aspect-square flex flex-col justify-between shadow-sm cursor-pointer transition-transform hover:scale-105';
-                    const colorData = { brand: color.מותג, name: color.שם_גוון, code: color.קוד_גוון, hex: color.hex };
-                    swatch.innerHTML = `<div class="w-full h-2/3 rounded-t-lg" style="background-color: ${color.hex};"></div><div class="p-2 text-xs"><p class="font-bold truncate">${color.שם_גוון ?? 'N/A'}</p><p class="text-secondary">${color.קוד_גוון ?? 'N/A'}</p></div>`;
-                    swatch.onclick = () => openTintOrderModal(colorData);
-                    grid.appendChild(swatch);
-                });
-            }
-
-            function openTintOrderModal(color) {
-                currentPaintOrder = color;
-                const header = document.getElementById('paint-order-header');
-                header.innerHTML = `<div class="w-16 h-16 rounded-full mx-auto mb-2 border-4" style="background-color: ${color.hex};"></div><h2 class="text-xl font-bold">${color.name ?? 'N/A'}</h2><p class="text-secondary">${color.code ?? 'N/A'} - ${color.brand ?? 'N/A'}</p>`;
-                document.getElementById('paint-branch').value = '';
-                document.getElementById('paint-liters').value = '';
-                openModal('paint-order-modal');
-            }
-
-            async function sendTintOrder() {
-                const orderData = { ...currentPaintOrder, branch: document.getElementById('paint-branch').value, liters: document.getElementById('paint-liters').value, customerId: currentUser.customerId, customerName: currentUser.name };
-                if (!orderData.branch || !orderData.liters) {
-                    showPopup('יש למלא את כל הפרטים');
-                    return;
-                }
-                sendTintBtn.disabled = true;
-                sendTintBtn.textContent = 'שולח...';
-                try {
-                    await apiCall('addNewTintOrder', { tintData: JSON.stringify(orderData) });
-                    showPopup('הזמנת הגיוון נשלחה בהצלחה!');
-                    closeModal('paint-order-modal');
-                } catch (error) {
-                    showPopup('שליחת ההזמנה נכשלה');
-                } finally {
-                    sendTintBtn.disabled = false;
-                    sendTintBtn.textContent = 'שליחת הזמנה';
-                }
-            }
-
-
-            function setupNavigation() {
-                const navItems = [ { id: 'home-page', icon: '🏠', label: 'ראשי' }, { id: 'containers-page', icon: '🏗️', label: 'מכולות' }, { id: 'materials-page', icon: '🧱', label: 'היסטוריה' }, { id: 'reports-page', icon: '📊', label: 'דוחות' }, { id: 'profile-page', icon: '👤', label: 'פרופיל' } ];
-                navContainer.innerHTML = navItems.map(item => `<button data-page="${item.id}" class="nav-btn flex-1 flex flex-col items-center p-2"><span class="text-2xl">${item.icon}</span><span>${item.label}</span></button>`).join('');
-                navContainer.addEventListener('click', (e) => { const button = e.target.closest('.nav-btn'); if (button?.dataset.page) switchPage(button.dataset.page); });
-            }
-
-            function setupEventListeners() {
-                loginBtn.addEventListener('click', handleLogin);
-                themeToggleBtn.addEventListener('click', () => {
-                    document.documentElement.classList.toggle('dark');
-                    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-                    if (document.getElementById('reports-page').classList.contains('active')) { renderOrdersChart(); }
-                });
-                
-                document.getElementById('edge-orders').addEventListener('click', () => switchPage('materials-page'));
-                document.getElementById('edge-containers').addEventListener('click', () => switchPage('containers-page'));
-                document.getElementById('edge-reports').addEventListener('click', () => switchPage('reports-page'));
-                document.getElementById('edge-settings').addEventListener('click', () => switchPage('profile-page'));
-                document.querySelectorAll('.quick-action-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => { if (e.currentTarget.dataset.action === 'new-order') { switchPage('order-wizard-page'); } });
-                });
-                document.querySelectorAll('.nav-btn-link').forEach(btn => btn.addEventListener('click', (e) => switchPage(e.currentTarget.dataset.page)));
-                
-                document.querySelectorAll('.brand-filter-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        document.querySelectorAll('.brand-filter-btn').forEach(b => {
-                             b.classList.remove('bg-blue-500', 'text-white');
-                             b.classList.add('border-gray-300', 'dark:border-gray-600');
-                        });
-                        e.currentTarget.classList.add('bg-blue-500', 'text-white');
-                        renderColorSwatches(e.currentTarget.dataset.brand);
-                    });
-                });
-
-                sendTintBtn.addEventListener('click', sendTintOrder);
-                
-                document.querySelectorAll('.modal').forEach(modalEl => {
-                    modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeModal(modalEl.id); });
-                });
-                document.querySelectorAll('[data-action="close-modal"]').forEach(button => {
-                    button.addEventListener('click', (e) => { const modal = e.target.closest('.modal'); if (modal) closeModal(modal.id); });
-                });
-                
-                let searchTimeout;
-                customerSearchInput.addEventListener('input', (e) => {
-                    clearTimeout(searchTimeout);
-                    const query = e.target.value;
-                    if (query.length > 2) {
-                        searchTimeout = setTimeout(async () => {
-                            try {
-                                const results = await apiCall('searchCustomers', { query });
-                                renderSearchResults(results);
-                            } catch (error) {
-                                searchResultsContainer.innerHTML = '<p class="text-red-500">שגיאה בחיפוש לקוחות.</p>';
-                            }
-                        }, 300); // Debounce to 300ms
-                    } else {
-                        searchResultsContainer.innerHTML = '';
-                    }
-                });
-            }
-            
-            function renderSearchResults(results) {
-                searchResultsContainer.innerHTML = '';
-                if (!results || results.length === 0) {
-                    searchResultsContainer.innerHTML = '<p class="text-secondary">לא נמצאו תוצאות.</p>';
-                    return;
-                }
-                const uniqueCustomers = Array.from(new Set(results.map(o => o.customerName)))
-                    .map(name => results.find(o => o.customerName === name));
-
-                uniqueCustomers.forEach(customer => {
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'p-3 card rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors';
-                    resultItem.innerHTML = `<span class="font-bold">${customer.customerName}</span><span class="text-blue-500 hover:underline">פרופיל</span>`;
-                    resultItem.onclick = () => showCustomerProfile({ name: customer.customerName });
-                    searchResultsContainer.appendChild(resultItem);
-                });
-            }
-            
-            // --- App Initialization ---
-            applySavedTheme();
-            setupNavigation();
-            setupEventListeners();
-            loginView.classList.add('active');
-            mainAppView.classList.remove('active');
-        });
-    </script>
+  </script>
 </body>
 </html>
