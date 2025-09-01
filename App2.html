@@ -122,7 +122,7 @@
     </div>
 
     <script>
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-cI1kev1KsbB1S830IML9dlcEZ6vtRoROT1PsYmyo7AIZP0U2KSBS_P9gZz0vKCGZqA/exec'; // <-- החלף בכתובת שלך!
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-cI1kev1KsbB1S830IML9dlcEZ6vtRoROT1PsYmyo7AIZP0U2KSBS_P9gZz0vKCGZqA/exec';
     let state = { client: null, currentScreen: 'login', catalog: [], orders: [] };
 
     const contentDiv = document.getElementById('content');
@@ -130,7 +130,7 @@
     const scrollTopBtn = document.getElementById('scrollTopBtn');
 
     async function api(action, params = {}) {
-        // FIX: Check if the URL is a placeholder and show a user-friendly error.
+        // This check is now less critical but good for debugging.
         if (GAS_WEB_APP_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL')) {
             Swal.fire({
                 icon: 'error',
@@ -344,17 +344,35 @@
     function updateClock() { dayjs.locale('he'); document.getElementById('live-clock').textContent = dayjs().format('dddd, D MMMM YYYY | HH:mm:ss'); }
 
     // --- INIT ---
-    document.getElementById('login-btn').addEventListener('click', async () => {
-        const btn = document.getElementById('login-btn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מאמת פרטים...';
-        state.client = await api('auth', { 
-            phone: document.getElementById('phone').value,
-            password: document.getElementById('password').value
-        });
-        if (state.client) initializeMainApp();
-        else btn.innerHTML = 'כניסה למערכת';
+    // FIX: Wait for the DOM to be fully loaded before attaching event listeners.
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginBtn = document.getElementById('login-btn');
+        
+        // This check ensures we don't crash if the button isn't found for some reason.
+        if (loginBtn) {
+            loginBtn.addEventListener('click', async () => {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מאמת פרטים...';
+                
+                const phone = document.getElementById('phone').value;
+                const password = document.getElementById('password').value;
+
+                state.client = await api('auth', { phone, password });
+                
+                if (state.client) {
+                    initializeMainApp();
+                } else {
+                    // Re-enable the button if login fails
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'כניסה למערכת';
+                }
+            });
+        } else {
+            console.error("Fatal Error: Login button could not be found.");
+            // Optionally, show an error message to the user on the page itself
+            document.body.innerHTML = '<div style="text-align: center; padding: 50px;"><h1>שגיאה קריטית</h1><p>רכיב הכניסה לא נטען כהלכה. אנא רענן את העמוד.</p></div>';
+        }
     });
     </script>
 </body>
 </html>
-
