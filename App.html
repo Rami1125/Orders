@@ -67,7 +67,6 @@
         
         .edge-panel-container { position: absolute; top: 0; right: 0; bottom: 0; z-index: 50; pointer-events: none; }
         .edge-panel { position: absolute; top: 50%; right: 8px; transform: translate(calc(100% - 20px), -50%); width: 80px; background: var(--edge-bg); border: 1px solid var(--edge-border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 20px; padding: 12px 8px; display: flex; flex-direction: column; gap: 12px; align-items: center; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); pointer-events: auto; }
-        .edge-panel.open { transform: translate(0, -50%); }
         .edge-btn { width: 60px; height: 60px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--edge-icon-bg); border: 1px solid transparent; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; position: relative; }
         .edge-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; border-radius: 99px; background-color: #ef4444; color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; border: 2px solid var(--card-bg); transform: scale(0); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .edge-btn.highlight .edge-badge { transform: scale(1); }
@@ -134,7 +133,7 @@
             <div id="login-view" class="view-container active">
                 <div id="login-page" class="flex-1 flex flex-col justify-center items-center bg-slate-200 dark:bg-slate-900 p-8">
                     <div class="w-full max-w-sm text-center space-y-6">
-                        <img id="login-logo" src="https://placehold.co/150x50/1e293b/FFFFFF?text=H.SABAN" alt="Company Logo" class="mx-auto h-12">
+                        <img id="login-logo" src="https://placehold.co/150x50/1e293b/FFFFFF?text=H.SABAN" alt="Company Logo">
                         <div class="relative inline-block">
                              <img id="user-avatar" src="https://placehold.co/100x100/FFFFFF/CCCCCC?text=" alt="User Avatar" class="w-28 h-28 rounded-full mx-auto border-4 border-white dark:border-slate-700 shadow-lg">
                              <div class="absolute -top-2 -right-2 text-4xl animate-wave">👋</div>
@@ -446,7 +445,7 @@
                                 <p class="text-xs text-secondary">${c.site || 'N/A'}</p>
                                 <div class="text-left">
                                     <p class="text-xs text-secondary">ימי שכירות: ${daysPassed}</p>
-                                    <p class="text-xs text-${daysPassed > 10 ? 'red' : 'green'}-600 font-bold">${statusText}</p>
+                                    <p class="text-xs text-${isOverdue ? 'red' : 'green'}-600 font-bold">${statusText}</p>
                                 </div>
                             </div>
                         `;
