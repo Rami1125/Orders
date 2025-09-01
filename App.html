@@ -84,11 +84,36 @@
         .form-content { position: relative; z-index: 2; }
         .status-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
         
-        .modal-body-scroll {
-            max-height: 500px; /* Adjust as needed */
-            overflow-y: auto;
+        /* Modal Fix */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
         }
         
+        .modal .card {
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-body-scroll {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
     </style>
 </head>
 <body class="bg-slate-800 flex items-center justify-center min-h-screen p-4">
@@ -197,7 +222,7 @@
                     </div>
                 </div>
                 <!-- Modal for Customer Profile -->
-                <div id="customer-profile-modal" class="modal items-center justify-center p-4 z-[1000] fixed inset-0 bg-black/50">
+                <div id="customer-profile-modal" class="modal">
                     <div class="card rounded-lg p-6 w-full max-w-3xl relative flex flex-col">
                         <button data-action="close-modal" class="absolute top-2 left-2 p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-200">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -299,6 +324,14 @@
                     throw error;
                 }
             }
+            
+            // Helper function to format date
+            function formatDate(dateString) {
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const date = new Date(dateString);
+                // Check if the date is valid before formatting
+                return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('he-IL', options);
+            }
 
             function showPopup(message, duration = 3000) {
                 const popup = document.createElement('div');
@@ -371,7 +404,17 @@
                 document.getElementById('customer-profile-name').textContent = `פרופיל לקוח: ${customerData.name}`;
 
                 const customerOrders = appData.orders.filter(o => o.customerName === customerData.name);
-                const customerContainers = appData.containers.filter(c => customerOrders.some(o => o.containerId === c.containerId));
+                
+                // Collect all container IDs from the customer's orders
+                const containerIds = new Set();
+                customerOrders.forEach(order => {
+                    if (order.containerId) {
+                        containerIds.add(order.containerId);
+                    }
+                });
+
+                // Filter the main container list based on the collected IDs
+                const customerContainers = appData.containers.filter(c => containerIds.has(c.containerId));
 
                 const totalOrders = customerOrders.length;
                 const openOrders = customerOrders.filter(o => o.status === 'חדשה' || o.status === 'בטיפול').length;
@@ -382,7 +425,7 @@
                     return daysPassed > 10;
                 }).length;
                 const lastOrder = customerOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-                const lastOrderDate = lastOrder ? new Date(lastOrder.timestamp).toLocaleDateString('he-IL') : 'N/A';
+                const lastOrderDate = lastOrder ? formatDate(lastOrder.timestamp) : 'N/A';
 
                 document.getElementById('profile-total-orders').textContent = totalOrders;
                 document.getElementById('profile-open-orders').textContent = openOrders;
@@ -393,14 +436,17 @@
                 containersList.innerHTML = '';
                 if (customerContainers.length > 0) {
                     customerContainers.forEach(c => {
-                        const daysPassed = Math.floor((new Date() - new Date(c.dateOut)) / (1000 * 60 * 60 * 24));
+                        const daysPassed = c.dateOut ? Math.floor((new Date() - new Date(c.dateOut)) / (1000 * 60 * 60 * 24)) : 'N/A';
+                        const isOverdue = daysPassed !== 'N/A' && daysPassed > 10;
+                        const statusColor = isOverdue ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                        const statusText = isOverdue ? 'חורגת 🚨' : 'פעילה';
                         containersList.innerHTML += `
                             <div class="card p-3 rounded-lg flex justify-between items-center bg-gray-50 dark:bg-gray-800">
-                                <p class="text-sm font-bold">מכולה ${c.containerId}</p>
-                                <p class="text-xs text-secondary">${c.site}</p>
+                                <p class="text-sm font-bold">מכולה ${c.containerId || 'N/A'}</p>
+                                <p class="text-xs text-secondary">${c.site || 'N/A'}</p>
                                 <div class="text-left">
                                     <p class="text-xs text-secondary">ימי שכירות: ${daysPassed}</p>
-                                    <p class="text-xs text-${daysPassed > 10 ? 'red' : 'green'}-600 font-bold">${daysPassed > 10 ? 'חורגת 🚨' : 'פעילה'}</p>
+                                    <p class="text-xs text-${daysPassed > 10 ? 'red' : 'green'}-600 font-bold">${statusText}</p>
                                 </div>
                             </div>
                         `;
@@ -416,7 +462,7 @@
                         ordersList.innerHTML += `
                             <div class="card p-3 rounded-lg flex justify-between items-center bg-gray-50 dark:bg-gray-800">
                                 <p class="text-sm font-bold">הזמנה #${order.orderId}</p>
-                                <p class="text-xs text-secondary">${new Date(order.timestamp).toLocaleDateString('he-IL')}</p>
+                                <p class="text-xs text-secondary">${formatDate(order.timestamp)}</p>
                                 <span class="status-badge bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">${order.status}</span>
                             </div>
                         `;
@@ -463,7 +509,7 @@
                                     <tr class="border-b border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
                                         <td class="p-3">${order.orderId}</td>
                                         <td class="p-3">${order.customerName}</td>
-                                        <td class="p-3">${new Date(order.timestamp).toLocaleDateString('he-IL')}</td>
+                                        <td class="p-3">${formatDate(order.timestamp)}</td>
                                         <td class="p-3"><span class="status-badge ${statusStyles[order.status] || ''}">${order.status}</span></td>
                                         <td class="p-3 font-bold">₪${order.totalAmount}</td>
                                         <td class="p-3"><button class="text-blue-500 hover:underline text-xs" onclick="showCustomerProfile({ name: '${order.customerName}' })">פרופיל</button></td>
@@ -488,16 +534,24 @@
                 
                 const listHtml = `
                     <div class="space-y-4">
-                        ${containers.map(c => `
-                            <div class="card p-4 rounded-xl">
-                                <div class="flex justify-between items-center mb-2">
-                                    <p class="font-bold text-lg">${c.containerId}</p>
-                                    <span class="status-badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">${c.status}</span>
+                        ${containers.map(c => {
+                            const daysPassed = c.dateOut ? Math.floor((new Date() - new Date(c.dateOut)) / (1000 * 60 * 60 * 24)) : 'N/A';
+                            const isOverdue = daysPassed !== 'N/A' && daysPassed > 10;
+                            const statusColor = isOverdue ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                            const statusText = isOverdue ? 'חורגת 🚨' : 'פעילה';
+
+                            return `
+                                <div class="card p-4 rounded-xl">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <p class="font-bold text-lg">מכולה ${c.containerId || 'N/A'}</p>
+                                        <span class="status-badge ${statusColor}">${statusText}</span>
+                                    </div>
+                                    <p class="text-secondary">${c.site || 'N/A'}</p>
+                                    <p class="text-sm text-secondary mt-1">תאריך יציאה: ${formatDate(c.dateOut)}</p>
+                                    <p class="text-sm text-secondary mt-1">ימי שכירות: ${daysPassed !== 'N/A' ? daysPassed : 'N/A'}</p>
                                 </div>
-                                <p class="text-secondary">${c.site}</p>
-                                <p class="text-sm text-secondary mt-1">תאריך יציאה: ${new Date(c.dateOut).toLocaleDateString('he-IL')}</p>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 `;
                  container.innerHTML += listHtml;
