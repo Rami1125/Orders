@@ -45,54 +45,25 @@
         @keyframes blink { 50% { opacity: 0; } }
         .blinking-dot { animation: blink 1.5s linear infinite; }
         
-        /* Custom scroll-to-top button */
-        #scrollTopBtn {
-            position: fixed;
-            bottom: 7rem;
-            left: 1.5rem; /* Adjusted for mobile view */
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
-            z-index: 1000;
+        @keyframes highlight-new-order {
+            0%, 100% { background-color: transparent; }
+            20%, 80% { background-color: #e6f7ff; box-shadow: 0 0 15px rgba(52, 152, 219, 0.5); }
         }
+        .highlight-new { animation: highlight-new-order 3s ease-out forwards; }
+        
+        #scrollTopBtn { position: fixed; bottom: 7rem; left: 1.5rem; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 1000; }
         #scrollTopBtn:hover { transform: scale(1.1); }
 
-        /* Image Lightbox */
-        .lightbox {
-            position: fixed; inset: 0; background-color: rgba(0,0,0,0.8);
-            display: flex; align-items: center; justify-content: center; z-index: 50;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
+        .lightbox { position: fixed; inset: 0; background-color: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .lightbox.show { opacity: 1; pointer-events: all; }
         .lightbox img { max-width: 90%; max-height: 80%; border-radius: 8px; }
         
-        /* Chat styles */
         .chat-bubble { max-width: 75%; padding: 10px 15px; border-radius: 20px; word-wrap: break-word; }
         .chat-user { background-color: var(--primary-color); color: white; border-bottom-right-radius: 5px; }
         .chat-agent { background-color: #e9ecef; color: var(--text-color); border-bottom-left-radius: 5px; }
-
-        /* Typing effect for inputs */
-        .typing-effect-input {
-            position: relative;
-        }
-        .typing-caret {
-            display: inline-block;
-            width: 2px;
-            height: 1.2em;
-            background-color: var(--primary-color);
-            animation: blink 1s step-end infinite;
-            position: absolute;
-            right: 1rem; /* Adjust as needed */
-            top: 50%;
-            transform: translateY(-50%);
-        }
+        
+        .choice-btn { border: 2px solid #e5e7eb; padding: 1rem; border-radius: 0.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .choice-btn.selected { border-color: var(--primary-color); background-color: #e6f7ff; color: var(--primary-color); font-weight: bold; }
     </style>
 </head>
 <body class="flex justify-center items-center h-screen">
@@ -105,13 +76,13 @@
             <div class="w-full text-center">
                 <h1 class="text-3xl font-bold text-white mb-2">VIP Portal</h1>
                 <p class="text-gray-300 mb-8">בלעדי ללקוחות ח. סבן בע"מ</p>
-                <div class="relative mb-4">
+                 <div class="relative mb-4">
                     <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input id="phone" type="tel" placeholder="מספר טלפון" class="w-full p-3 pl-12 border-2 border-transparent focus:border-green-400 focus:ring-0 rounded-full text-center transition">
+                    <input id="phone" type="tel" placeholder="מספר טלפון" class="w-full p-3 pl-12 border-2 border-transparent focus:border-green-400 focus:ring-0 rounded-full text-center transition" value="972508860896">
                 </div>
                 <div class="relative mb-6">
                      <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input id="password" type="password" placeholder="סיסמה" class="w-full p-3 pl-12 border-2 border-transparent focus:border-green-400 focus:ring-0 rounded-full text-center transition">
+                    <input id="password" type="password" placeholder="סיסמה" class="w-full p-3 pl-12 border-2 border-transparent focus:border-green-400 focus:ring-0 rounded-full text-center transition" value="סבן">
                 </div>
                 <button id="login-btn" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-full font-bold shadow-lg hover:scale-105 transform transition">
                      כניסה למערכת
@@ -121,7 +92,6 @@
 
         <!-- Main App (hidden initially) -->
         <main id="main-app" class="hidden flex-grow flex flex-col bg-white">
-            <!-- Header -->
             <header class="p-4 bg-white border-b flex justify-between items-center sticky top-0 z-10">
                 <div class="flex items-center">
                     <span id="online-indicator" class="w-3 h-3 bg-green-400 rounded-full mr-3 blinking-dot"></span>
@@ -131,20 +101,12 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="chat-btn" class="relative text-gray-600">
-                        <i class="fas fa-comments text-2xl"></i>
-                         <span id="chat-dot" class="hidden absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                    </button>
-                    <!-- Add more header buttons if needed -->
+                    <button id="chat-btn" class="relative text-gray-600"><i class="fas fa-comments text-2xl"></i><span id="chat-dot" class="hidden absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span></button>
                 </div>
             </header>
             
-            <!-- Content Area -->
-            <div id="content" class="flex-grow p-4 overflow-y-auto">
-                <!-- Content will be injected here -->
-            </div>
+            <div id="content" class="flex-grow p-4 overflow-y-auto"></div>
 
-            <!-- Bottom Navigation -->
             <nav class="grid grid-cols-5 items-center p-2 bg-white border-t shadow-inner mt-auto">
                 <button data-screen="home" class="nav-btn text-gray-500 flex flex-col items-center"><i class="fas fa-th-large text-xl"></i><span class="text-xs mt-1">ראשי</span></button>
                 <button data-screen="containers" class="nav-btn text-gray-500 flex flex-col items-center"><i class="fas fa-truck text-xl"></i><span class="text-xs mt-1">מכולות</span></button>
@@ -154,35 +116,53 @@
             </nav>
         </main>
         
-        <!-- Modals and Overlays -->
         <div id="modals-container"></div>
         <div id="image-lightbox" class="lightbox" onclick="this.classList.remove('show')"><img></div>
         <button id="scrollTopBtn" onclick="document.getElementById('content').scrollTop = 0;"><i class="fas fa-arrow-up"></i></button>
     </div>
 
     <script>
-    // Mock Data and Config
-    const MOCK_CATALOG = [
-        { sku: 'P001', productName: 'שק מלט 25 ק"ג', description: 'תערובת צמנט פורטלנד', price: 25, imageUrl: 'https://i.imgur.com/pS5gI3x.png' },
-        { sku: 'P002', productName: 'בלוק איטונג 7 ס"מ', description: 'קל וחזק במיוחד', price: 5.5, imageUrl: 'https://i.imgur.com/Qh7aJ4v.png' },
-        { sku: 'C1', productName: 'מכולה 8 רגל', description: 'לאחסנה והובלה', price: 350, imageUrl: 'https://i.imgur.com/q2Y2Zz1.png' }
-    ];
-    
-    // --- STATE MANAGEMENT ---
-    let state = { client: { 'שם_לקוח': 'רמי לוי' }, currentScreen: 'login', catalog: MOCK_CATALOG, orders: [] };
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-cI1kev1KsbB1S830IML9dlcEZ6vtRoROT1PsYmyo7AIZP0U2KSBS_P9gZz0vKCGZqA/exec'; // <-- החלף בכתובת שלך!
+    let state = { client: null, currentScreen: 'login', catalog: [], orders: [] };
 
-    // --- DOM ELEMENTS ---
     const contentDiv = document.getElementById('content');
     const modalsContainer = document.getElementById('modals-container');
     const scrollTopBtn = document.getElementById('scrollTopBtn');
+
+    async function api(action, params = {}) {
+        // FIX: Check if the URL is a placeholder and show a user-friendly error.
+        if (GAS_WEB_APP_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL')) {
+            Swal.fire({
+                icon: 'error',
+                title: 'הגדרה חסרה',
+                html: 'יש לעדכן את כתובת ה-API בקוד.<br>החלף את <code>YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL</code> בכתובת שקיבלת מ-Google Apps Script.',
+                confirmButtonText: 'הבנתי'
+            });
+            return null;
+        }
+
+        const url = new URL(GAS_WEB_APP_URL);
+        url.searchParams.set('action', action);
+        Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+        try {
+            const res = await fetch(url);
+            const result = await res.json();
+            if (!result.success) throw new Error(result.message);
+            return result.data;
+        } catch (error) {
+            Swal.fire('שגיאת תקשורת', error.message, 'error');
+            return null;
+        }
+    }
     
-    // --- CORE LOGIC ---
-    function initializeMainApp() {
+    async function initializeMainApp() {
         document.getElementById('client-name').textContent = state.client['שם_לקוח'];
         document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
+        document.getElementById('main-app').classList.remove('hidden', 'flex');
         document.getElementById('main-app').classList.add('fade-in', 'flex');
 
+        state.orders = await api('listOrders', { phone: state.client['טלפון_לקוח'] }) || [];
+        
         setupEventListeners();
         updateClock();
         setInterval(updateClock, 1000);
@@ -192,90 +172,49 @@
     function setupEventListeners() {
         document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.screen)));
         document.getElementById('new-order-choice-btn').addEventListener('click', showNewOrderChoice);
-        document.getElementById('chat-btn').addEventListener('click', renderChatModal);
-        
-        contentDiv.addEventListener('scroll', () => {
-            scrollTopBtn.style.opacity = contentDiv.scrollTop > 200 ? '1' : '0';
-        });
+        contentDiv.addEventListener('scroll', () => { scrollTopBtn.style.opacity = contentDiv.scrollTop > 200 ? '1' : '0'; });
     }
     
     function navigateTo(screen) {
         state.currentScreen = screen;
         contentDiv.innerHTML = '';
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.toggle('text-green-600', btn.dataset.screen === screen);
-        });
-        
-        // Lazy load content
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('text-green-600', btn.dataset.screen === screen));
         const renderer = window[`render${screen.charAt(0).toUpperCase() + screen.slice(1)}Screen`];
         if (renderer) renderer();
-        else contentDiv.innerHTML = `<h1 class='text-center p-8'>דף בבנייה: ${screen}</h1>`;
     }
     
-    // --- SCREEN RENDERERS ---
     function renderHomeScreen() {
+        const containerOrders = state.orders.filter(o => o.orderType === 'container');
+        const materialsOrders = state.orders.filter(o => o.orderType === 'materials');
         contentDiv.innerHTML = `
-        <div class="p-4 space-y-6 slide-up">
+        <div class="space-y-6 slide-up">
             <div>
-                <h2 class="text-xl font-bold mb-2">📦 ניהול מכולות</h2>
-                <div class="bg-white p-4 rounded-lg shadow">טבלת מכולות פעילות תוצג כאן...</div>
+                <h2 class="text-xl font-bold mb-2 flex items-center"><i class="fas fa-truck text-green-600 mr-3"></i>מכולות פעילות</h2>
+                <div id="container-orders-list" class="bg-white p-2 rounded-lg shadow space-y-2">
+                    ${containerOrders.length > 0 ? containerOrders.map(orderRow).join('') : '<p class="text-center text-gray-500 p-4">אין מכולות פעילות</p>'}
+                </div>
             </div>
             <div>
-                <h2 class="text-xl font-bold mb-2">🧱 הזמנות חומרי בניין</h2>
-                 <div class="bg-white p-4 rounded-lg shadow">
-                    <div class="flex border-b pb-2 mb-2 font-semibold">
-                        <div class="w-1/3">תעודה</div><div class="w-1/3">סטטוס</div><div class="w-1/3 text-left">תאריך</div>
-                    </div>
-                    <div class="text-gray-500 text-center p-4">אין הזמנות חומרים להצגה</div>
-                 </div>
-            </div>
-             <div>
-                <h2 class="text-xl font-bold mb-2">📊 ניתוח ודוחות</h2>
-                 <div class="bg-white p-4 rounded-lg shadow">
-                    <canvas id="ordersChart"></canvas>
+                <h2 class="text-xl font-bold mb-2 flex items-center"><i class="fas fa-cubes text-blue-600 mr-3"></i>הזמנות חומרים</h2>
+                 <div id="materials-orders-list" class="bg-white p-2 rounded-lg shadow space-y-2">
+                    ${materialsOrders.length > 0 ? materialsOrders.map(orderRow).join('') : '<p class="text-center text-gray-500 p-4">אין הזמנות חומרים</p>'}
                  </div>
             </div>
         </div>`;
-        
-        // Init chart
-        setTimeout(() => {
-            const ctx = document.getElementById('ordersChart')?.getContext('2d');
-            if(ctx) new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['מכולות', 'חומרים', 'החלפות'],
-                    datasets: [{
-                        label: 'הזמנות החודש',
-                        data: [5, 12, 3],
-                        backgroundColor: ['#2E8B57', '#4682B4', '#FFD700'],
-                    }]
-                },
-                options: { responsive: true }
-            });
-        }, 100);
     }
-    
-    function renderMapScreen() {
-        contentDiv.innerHTML = `<div id="map-container" class="h-full w-full rounded-lg" style="min-height: 400px;"></div>`;
-        setTimeout(() => {
-            const map = L.map('map-container').setView([32.0853, 34.7818], 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            // Example marker with history popup
-            const marker = L.marker([32.109333, 34.855499]).addTo(map)
-                .bindPopup("<b>רחוב התדהר 15, רעננה</b><br><button class='history-btn mt-2 p-1 bg-green-500 text-white rounded text-xs'>הצג היסטוריה</button>");
-            
-            marker.on('popupopen', () => {
-                document.querySelector('.history-btn').addEventListener('click', () => {
-                     Swal.fire({ title: 'היסטוריית הזמנות', html: 'טבלת הזמנות קטנה תוצג כאן...' });
-                });
-            });
-        }, 0);
-    }
-    
-    function renderContainersScreen() { contentDiv.innerHTML = `<div class="p-4 text-center">דף ניהול מכולות מלא יוצג כאן, כולל התראות על ימי שכירות.</div>`; }
-    function renderMaterialsScreen() { contentDiv.innerHTML = `<div class="p-4 text-center">דף ניהול הזמנות חומרי בניין יוצג כאן.</div>`; }
 
-    // --- NEW ORDER FLOW ---
+    function orderRow(order) {
+        const statusColors = { 'ממתין לאישור': 'bg-yellow-400', 'בטיפול': 'bg-blue-400', 'בוצע': 'bg-green-400' };
+        return `
+        <div id="order-${order.תעודה}" class="p-3 border-b last:border-b-0">
+            <div class="flex justify-between items-center">
+                <span class="font-bold">${order.פרויקט}</span>
+                <span class="text-xs px-2 py-1 rounded-full text-white ${statusColors[order.סטטוס] || 'bg-gray-400'}">${order.סטטוס}</span>
+            </div>
+            <div class="text-sm text-gray-600">${order.כתובת}</div>
+        </div>`;
+    }
+
     function showNewOrderChoice() {
         Swal.fire({
             title: 'בחר סוג הזמנה',
@@ -291,15 +230,13 @@
             showConfirmButton: false,
             willOpen: () => {
                 document.getElementById('swal-order-container').addEventListener('click', () => { renderNewOrderModal('container'); Swal.close(); });
-                document.getElementById('swal-order-materials').addEventListener('click', () => { renderNewOrderModal('materials'); Swal.close(); });
+                document.getElementById('swal-order-materials').addEventListener('click', () => { /* Logic for materials form */ Swal.close(); });
             }
         });
     }
 
     function renderNewOrderModal(type) {
-        const title = type === 'container' ? 'הזמנת מכולה חדשה' : 'הזמנת חומרי בניין';
-        const formHtml = type === 'container' ? getContainerFormHtml() : getMaterialsFormHtml();
-        
+        const title = 'הזמנת מכולה חדשה';
         modalsContainer.innerHTML = `
             <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
                 <div class="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col slide-up">
@@ -307,134 +244,117 @@
                         <h2 class="font-semibold text-lg">${title}</h2>
                         <button onclick="closeModal('order-modal')" class="text-gray-500 text-2xl">&times;</button>
                     </header>
-                    <div class="p-4 overflow-y-auto">${formHtml}</div>
+                    <div class="p-4 overflow-y-auto">${getContainerFormHtml()}</div>
                     <footer class="p-3 bg-gray-100 rounded-b-lg text-left">
-                        <button class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">שלח הזמנה</button>
+                        <button id="send-order-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">שלח הזמנה</button>
                     </footer>
                 </div>
             </div>`;
-        
-        if (type === 'materials') setupMaterialsFormListeners();
+        document.getElementById('send-order-btn').addEventListener('click', () => handleSendOrder('container'));
+        setupChoiceButtons();
     }
     
-    function getContainerFormHtml() { return `<p>טופס הזמנת מכולה: שאלות על סוג מכולה, משך שכירות וכו'...</p>`; }
-    
-    function getMaterialsFormHtml() {
+    function getContainerFormHtml() {
         return `
-            <div class="space-y-4">
+            <div class="space-y-4 text-right">
+                <div><label class="font-semibold">פרויקט:</label><input id="form-project" type="text" class="w-full p-2 border rounded mt-1"></div>
+                <div><label class="font-semibold">כתובת:</label><input id="form-address" type="text" class="w-full p-2 border rounded mt-1"></div>
                 <div>
-                    <label class="font-semibold">חפש מוצר (לפי שם או מק"ט):</label>
-                    <div class="relative typing-effect-input">
-                        <input type="text" id="product-search" class="w-full p-2 border rounded mt-1" placeholder="התחל להקליד...">
-                        <span class="typing-caret"></span>
-                    </div>
-                    <div id="search-results" class="absolute bg-white border rounded mt-1 w-full max-w-md max-h-48 overflow-y-auto z-50 hidden"></div>
-                </div>
-                <div id="selected-product" class="hidden p-3 bg-gray-100 rounded-lg flex items-center space-x-4 rtl:space-x-reverse">
-                    <img id="selected-product-img" src="" class="w-16 h-16 object-cover rounded cursor-pointer" onclick="showImageLightbox(this.src)">
-                    <div>
-                        <h3 id="selected-product-name" class="font-bold"></h3>
-                        <p id="selected-product-desc" class="text-sm text-gray-600"></p>
+                    <label class="font-semibold mb-2 block">סוג המכולה:</label>
+                    <div class="grid grid-cols-3 gap-2" data-group="containerType">
+                        <button class="choice-btn" data-value="8 רגל">8 רגל</button>
+                        <button class="choice-btn" data-value="10 רגל">10 רגל</button>
+                        <button class="choice-btn" data-value="פסולת בניין">פסולת</button>
                     </div>
                 </div>
                 <div>
-                    <label class="font-semibold">כמות:</label>
-                    <input type="number" class="w-full p-2 border rounded mt-1" value="1">
-                </div>
-                <button class="w-full bg-blue-500 text-white p-2 rounded-lg">הוסף פריט להזמנה</button>
-                <div id="order-items">
-                    <h3 class="font-bold mt-4">פריטים בהזמנה:</h3>
-                    <div class="text-gray-500">...</div>
-                </div>
-            </div>`;
-    }
-
-    function setupMaterialsFormListeners() {
-        const searchInput = document.getElementById('product-search');
-        const searchResults = document.getElementById('search-results');
-        
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            if (query.length < 1) {
-                searchResults.classList.add('hidden');
-                return;
-            }
-            const results = state.catalog.filter(p => p.productName.includes(query) || p.sku.toLowerCase().includes(query));
-            searchResults.innerHTML = results.map(p => 
-                `<div class="p-2 hover:bg-gray-100 cursor-pointer" data-sku="${p.sku}">${p.productName}</div>`
-            ).join('');
-            searchResults.classList.remove('hidden');
-        });
-        
-        searchResults.addEventListener('click', (e) => {
-            if (e.target.dataset.sku) {
-                const product = state.catalog.find(p => p.sku === e.target.dataset.sku);
-                selectProduct(product);
-                searchResults.classList.add('hidden');
-                searchInput.value = '';
-            }
-        });
-    }
-
-    function selectProduct(product) {
-        document.getElementById('selected-product').classList.remove('hidden');
-        document.getElementById('selected-product-img').src = product.imageUrl;
-        document.getElementById('selected-product-name').textContent = product.productName;
-        document.getElementById('selected-product-desc').textContent = product.description;
-    }
-
-    function showImageLightbox(src) {
-        const lightbox = document.getElementById('image-lightbox');
-        lightbox.querySelector('img').src = src;
-        lightbox.classList.add('show');
-    }
-    
-    // --- CHAT MODAL ---
-    function renderChatModal() {
-        modalsContainer.innerHTML = `
-            <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center p-0 md:p-4 z-40">
-                <div class="bg-white rounded-t-lg md:rounded-lg w-full max-w-md h-[80vh] flex flex-col slide-up">
-                    <header class="p-4 bg-gray-100 rounded-t-lg flex justify-between items-center">
-                        <div class="flex items-center">
-                             <img src="https://i.imgur.com/your-agent-avatar.png" class="w-10 h-10 rounded-full mr-3">
-                             <div>
-                                <h2 class="font-semibold text-lg">מחלקת הזמנות</h2>
-                                <p class="text-xs text-green-500">זמין כעת</p>
-                             </div>
-                        </div>
-                        <button onclick="closeModal('chat-modal')" class="text-gray-500 text-2xl">&times;</button>
-                    </header>
-                    <div class="p-4 flex-grow overflow-y-auto space-y-4">
-                        <!-- Chat messages -->
-                        <div class="flex justify-start"><div class="chat-bubble chat-agent">שלום רמי, במה נוכל לעזור?</div></div>
-                        <div class="flex justify-end"><div class="chat-bubble chat-user">היי, רציתי לברר סטטוס הזמנה C-1024.</div></div>
+                    <label class="font-semibold mb-2 block">סוג השכירות:</label>
+                    <div class="grid grid-cols-3 gap-2" data-group="rentalType">
+                        <button class="choice-btn" data-value="חודשית">חודשית</button>
+                        <button class="choice-btn" data-value="פינוי">פינוי</button>
+                        <button class="choice-btn" data-value="החלפה">החלפה</button>
                     </div>
-                    <footer class="p-3 bg-gray-100 rounded-b-lg flex items-center">
-                        <input type="text" class="w-full p-2 border rounded-full px-4" placeholder="הקלד הודעה...">
-                        <button class="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center mr-2"><i class="fas fa-paper-plane"></i></button>
-                    </footer>
                 </div>
+                <div><label class="font-semibold">הערות:</label><textarea id="form-notes" class="w-full p-2 border rounded mt-1"></textarea></div>
             </div>`;
     }
 
-    function closeModal(modalId) {
-        document.getElementById(modalId)?.remove();
+    function setupChoiceButtons() {
+        document.querySelectorAll('[data-group]').forEach(group => {
+            group.addEventListener('click', e => {
+                if (e.target.classList.contains('choice-btn')) {
+                    group.querySelectorAll('.choice-btn').forEach(btn => btn.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                }
+            });
+        });
     }
     
-    // --- UTILITIES ---
-    function updateClock() {
-        dayjs.locale('he'); // Ensure Hebrew locale
-        const now = dayjs();
-        document.getElementById('live-clock').textContent = now.format('dddd, D MMMM YYYY | HH:mm:ss');
+    async function handleSendOrder(orderType) {
+        const project = document.getElementById('form-project').value;
+        const address = document.getElementById('form-address').value;
+        const containerType = document.querySelector('[data-group="containerType"] .selected')?.dataset.value;
+        const rentalType = document.querySelector('[data-group="rentalType"] .selected')?.dataset.value;
+        const notes = document.getElementById('form-notes').value;
+
+        if (!project || !address || !containerType || !rentalType) {
+            Swal.fire('פרטים חסרים', 'יש למלא את כל השדות', 'warning');
+            return;
+        }
+
+        const items = [{ type: containerType, rental: rentalType, notes: notes }];
+        
+        const orderData = {
+            phone: state.client['טלפון_לקוח'],
+            orderType: orderType,
+            items: JSON.stringify(items),
+            project: project,
+            address: address,
+        };
+
+        const newOrder = await api('createOrder', orderData);
+
+        if (newOrder) {
+            closeModal('order-modal');
+            state.orders.unshift(newOrder); // Add to the beginning of the list
+            navigateTo('home'); // Refresh home screen
+            
+            setTimeout(() => {
+                document.getElementById(`order-${newOrder.תעודה}`)?.classList.add('highlight-new');
+            }, 100);
+
+            const whatsappMessage = encodeURIComponent(`*הזמנת מכולה חדשה* \n\n*לקוח:* ${state.client['שם_לקוח']}\n*פרויקט:* ${project}\n*כתובת:* ${address}\n*סוג:* ${containerType}, ${rentalType}`);
+            Swal.fire({
+                icon: 'success',
+                title: 'ההזמנה נשלחה בהצלחה!',
+                html: 'היא מופיעה כעת בדף הראשי וממתינה לאישור.',
+                confirmButtonText: 'מצוין',
+                showCancelButton: true,
+                cancelButtonText: `<i class="fab fa-whatsapp"></i> שתף בווטסאפ`,
+                cancelButtonColor: '#25D366'
+            }).then(result => {
+                if (result.dismiss === Swal.DismissReason.cancel) {
+                    window.open(`https://api.whatsapp.com/send?text=${whatsappMessage}`);
+                }
+            });
+        }
     }
+    
+    function closeModal(modalId) { document.getElementById(modalId)?.remove(); }
+    function updateClock() { dayjs.locale('he'); document.getElementById('live-clock').textContent = dayjs().format('dddd, D MMMM YYYY | HH:mm:ss'); }
 
     // --- INIT ---
-    document.getElementById('login-btn').addEventListener('click', () => {
-        // Simulate successful login
+    document.getElementById('login-btn').addEventListener('click', async () => {
         const btn = document.getElementById('login-btn');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מאמת פרטים...';
-        setTimeout(() => initializeMainApp(), 1500);
+        state.client = await api('auth', { 
+            phone: document.getElementById('phone').value,
+            password: document.getElementById('password').value
+        });
+        if (state.client) initializeMainApp();
+        else btn.innerHTML = 'כניסה למערכת';
     });
     </script>
 </body>
 </html>
+
