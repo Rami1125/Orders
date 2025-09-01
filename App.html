@@ -2,818 +2,474 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ניהול מכולות</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול מכולות</title>
     
-    <!-- Chosen Palette: Professional Calm -->
-    <!-- Application Structure Plan: האפליקציה בנויה כ-Single-Page Application (SPA) במבנה מונחה-משימות המותאם למובייל. המבנה נבחר כדי לספק חוויה מהירה ורציפה ללא טעינות עמוד מחדש. הניווט מתבצע דרך תפריט תחתון קבוע, המאפשר גישה מהירה לפעולות המרכזיות: דשבורד, רשימת הזמנות, ויצירת הזמנה חדשה. מבנה זה הופך את המשימות הנפוצות ביותר (בדיקת סטטוס ויצירת הזמנה) לזמינות ומיידיות, מה שמשפר דרמטית את חווית המשתמש בשטח. מסכים נוספים כמו קטלוג והגדרות נגישים מהדשבורד כדי לא להעמיס על הניווט הראשי. מודלים וחלונות צד משמשים להצגת פרטים והיסטוריה מבלי לעזוב את ההקשר הנוכחי (למשל, צפייה בפרטי הזמנה מתוך הרשימה). -->
-    <!-- Visualization & Content Choices: המידע מהמפרט מוצג באופן הבא: (1) דשבורד: הצגת KPIs (מדדי ביצוע) ככרטיסיות סטטיסטיות פשוטות (HTML/Tailwind) כדי לתת תמונת מצב מהירה. (2) רשימת הזמנות: הצגה כרשימת "קארדים" (HTML/Tailwind), כאשר כל קארד מסכם הזמנה וכולל תגית סטטוס צבעונית לזיהוי מהיר. אינטראקציה: לחיצה על קארד פותחת מודל עם פרטים מלאים והיסטוריה. (3) הודעות: תיבת טקסט עליונה עם אפקט הקלדה (CSS Animation) להבלטת הודעות חשובות, ונקודת חיווי אדומה על אייקון הפעמון. (4) מפה: שימוש ב-Leaflet להצגת מיקומי הזמנות על מפה אינטראקטיבית. אינטראקציה: לחיצה על סמן פותחת פופאפ עם פרטי הזמנה וקישור ל-Waze. (5) קטלוג וסל קניות: רשת מוצרים ויזואלית וסל קניות נשלף מהצד (Drawer) לחווית רכישה מודרנית. בחירות אלו נועדו להפוך את המידע הטבלאי מה-Google Sheets לנגיש, ויזואלי ואינטראקטיבי בממשק מובייל. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
+    <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Favicon (fixes 404 error) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
 
     <style>
-        body { font-family: 'Rubik', sans-serif; background-color: #f0f2f5; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .swal2-popup { font-family: 'Rubik', sans-serif; }
-        .bottom-nav-icon {
-            background-size: 28px 28px;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 40px;
-            height: 40px;
+        body { font-family: 'Rubik', sans-serif; }
+        .bg-gradient-primary { background-image: linear-gradient(to right, #2E8B57, #3CB371); }
+        .tab-active { border-bottom: 2px solid #2E8B57; color: #2E8B57; font-weight: 600; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .highlight-new {
+            animation: highlight 3s ease-out;
         }
-        .typing-effect {
-            width: 0;
-            overflow: hidden;
-            white-space: nowrap;
-            border-right: .15em solid orange;
-            animation: typing 3s steps(30, end) forwards, caret-blink .75s step-end infinite;
-        }
-        @keyframes typing { from { width: 0 } to { width: 100% } }
-        @keyframes caret-blink { from, to { border-color: transparent } 50% { border-color: orange; } }
-        
-        .new-item-highlight {
-            animation: highlight-fade 5s ease-out forwards;
-        }
-        @keyframes highlight-fade {
-            0% { background-color: #fef9c3; } /* yellow-100 */
-            100% { background-color: white; }
-        }
-
-        .blinking-dot-container { position: relative; }
-        .blinking-dot {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            height: 10px;
-            width: 10px;
-            background-color: #ef4444; /* red-500 */
-            border-radius: 50%;
-            border: 1px solid white;
-            animation: blink-animation 1.5s infinite;
-        }
-        @keyframes blink-animation {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+        @keyframes highlight {
+            0%, 100% { background-color: transparent; }
+            20%, 80% { background-color: #fefcbf; } /* yellow-100 */
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 
-    <!-- E: Login Screen -->
-    <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-        <div class="w-full max-w-sm">
-            <div class="text-center mb-8">
-                <i class="fas fa-truck-ramp-box text-5xl text-blue-600"></i>
-                <h1 class="text-3xl font-bold text-gray-800 mt-4">מערכת ניהול</h1>
-                <p class="text-gray-500">התחברות לחשבון</p>
-            </div>
-            <form id="login-form" class="bg-white shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">מספר טלפון</label>
-                    <input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" id="phone" type="tel" placeholder="050-1234567" value="972508860896">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">סיסמה</label>
-                    <input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" id="password" type="password" placeholder="********" value="סבן">
-                </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline w-full transition-transform transform hover:scale-105" type="submit">
-                        התחברות
-                    </button>
-                </div>
-            </form>
+    <!-- App Container -->
+    <div id="app" class="max-w-md mx-auto bg-white shadow-lg h-screen flex flex-col">
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="flex flex-col items-center justify-center h-full p-8 fade-in">
+             <h1 class="text-4xl font-bold text-gray-700 mb-2">מערכת ניהול</h1>
+             <h2 class="text-xl font-light text-gray-500 mb-8">ח. סבן בע"מ</h2>
+             <div class="w-full">
+                 <input id="phone" type="tel" placeholder="מספר טלפון" class="w-full p-3 mb-4 border rounded-lg text-center" value="972508860896">
+                 <input id="password" type="password" placeholder="סיסמה" class="w-full p-3 mb-6 border rounded-lg text-center" value="סבן">
+                 <button id="login-btn" class="w-full bg-gradient-primary text-white p-3 rounded-lg font-bold shadow-md hover:opacity-90 transition">
+                     <i class="fas fa-sign-in-alt mr-2"></i> כניסה
+                 </button>
+             </div>
         </div>
-    </div>
-    <!-- S: Login Screen -->
 
-    <!-- E: Main Application Container -->
-    <div id="app-container" class="hidden w-full max-w-lg mx-auto bg-white min-h-screen flex-col pb-24">
-        <!-- Header -->
-        <header class="bg-white p-4 flex justify-between items-center shadow-sm sticky top-0 z-20">
-            <div class="flex items-center">
-                <img id="user-avatar" src="https://placehold.co/40x40/E2E8F0/A0AEC0?text=U" class="w-10 h-10 rounded-full mr-3 ml-3" alt="User Avatar">
+        <!-- Main App (hidden initially) -->
+        <main id="main-app" class="hidden flex-grow flex flex-col">
+            <!-- Header -->
+            <header class="p-4 bg-gray-100 border-b flex justify-between items-center">
                 <div>
-                    <p class="font-semibold text-gray-800" id="user-name">טוען...</p>
-                    <p class="text-xs text-gray-500">לקוח פעיל</p>
+                    <h1 class="text-xl font-semibold text-gray-800">שלום, <span id="client-name"></span></h1>
+                    <p id="typing-notice" class="text-sm text-green-600 h-5"></p>
                 </div>
-            </div>
-            <div id="notifications-icon-container" class="blinking-dot-container">
-                <i class="fas fa-bell text-2xl text-gray-500 cursor-pointer"></i>
-                <!-- Blinking dot will be added here by JS if there are new notices -->
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-grow p-4">
-            <!-- Dashboard Page -->
-            <div id="dashboard-page" class="page active">
-                <div id="notice-box" class="hidden bg-gray-800 text-white p-4 rounded-lg mb-4 shadow-lg">
-                    <div class="flex items-start">
-                        <i class="fas fa-lightbulb text-yellow-400 text-xl mt-1 ml-3"></i>
-                        <div>
-                            <h3 class="font-bold mb-1" id="notice-title"></h3>
-                            <p class="text-sm typing-effect" id="notice-message"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-blue-100 text-blue-800 p-4 rounded-lg shadow"><p class="font-bold text-2xl" id="kpi-active">0</p><p>בביצוע</p></div>
-                    <div class="bg-green-100 text-green-800 p-4 rounded-lg shadow"><p class="font-bold text-2xl" id="kpi-completed">0</p><p>הושלמו</p></div>
-                    <div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg shadow"><p class="font-bold text-2xl" id="kpi-pending">0</p><p>ממתינות</p></div>
-                    <div class="bg-gray-100 text-gray-800 p-4 rounded-lg shadow"><p class="font-bold text-2xl" id="kpi-projects">0</p><p>פרויקטים</p></div>
-                </div>
-                <div class="mt-6">
-                     <h3 class="font-bold text-lg mb-2 text-gray-700">קישורים מהירים</h3>
-                     <div class="space-y-3">
-                        <button onclick="showPage('catalog-page')" class="w-full text-right bg-white p-4 rounded-lg shadow-sm flex items-center justify-between">
-                            <span><i class="fas fa-book-open text-blue-500 ml-3"></i> קטלוג מוצרים</span>
-                            <i class="fas fa-chevron-left text-gray-400"></i>
-                        </button>
-                        <button onclick="showPage('map-page')" class="w-full text-right bg-white p-4 rounded-lg shadow-sm flex items-center justify-between">
-                            <span><i class="fas fa-map-marked-alt text-green-500 ml-3"></i> מפת מכולות</span>
-                            <i class="fas fa-chevron-left text-gray-400"></i>
-                        </button>
-                     </div>
-                </div>
-            </div>
-
-            <!-- Orders Page -->
-            <div id="orders-page" class="page">
-                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-gray-800">הזמנות אחרונות</h2>
-                    <select id="status-filter" class="border rounded-lg p-2 text-sm">
-                        <option value="all">הכל</option>
-                        <option value="ממתין לביצוע">ממתין לביצוע</option>
-                        <option value="בדרך">בדרך</option>
-                        <option value="בוצע">בוצע</option>
-                        <option value="בוטל">בוטל</option>
-                    </select>
-                </div>
-                <div id="orders-list" class="space-y-4">
-                    <!-- Order cards will be injected here by JS -->
-                </div>
-            </div>
+                <button id="notifications-btn" class="relative text-gray-500">
+                    <i class="fas fa-bell text-2xl"></i>
+                    <span id="notice-dot" class="hidden absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                </button>
+            </header>
             
-            <!-- Map Page -->
-            <div id="map-page" class="page">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">מיקום מכולות</h2>
-                <div id="map" class="h-96 w-full rounded-lg shadow-md"></div>
+            <!-- Content Area -->
+            <div id="content" class="flex-grow p-4 overflow-y-auto">
+                <!-- Content will be injected here -->
             </div>
 
-            <!-- Catalog Page -->
-            <div id="catalog-page" class="page">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-gray-800">קטלוג מוצרים</h2>
-                    <div id="cart-icon" class="relative cursor-pointer">
-                        <i class="fas fa-shopping-cart text-2xl text-gray-600"></i>
-                        <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
-                    </div>
-                </div>
-                <div id="catalog-grid" class="grid grid-cols-2 gap-4">
-                    <!-- Catalog items will be injected here -->
-                </div>
-            </div>
-
+            <!-- Bottom Navigation -->
+            <nav class="grid grid-cols-5 items-center p-2 bg-white border-t-2 shadow-inner">
+                <button data-screen="home" class="nav-btn text-gray-500 flex flex-col items-center">
+                    <i class="fas fa-home text-xl"></i><span class="text-xs">בית</span>
+                </button>
+                <button data-screen="orders" class="nav-btn text-gray-500 flex flex-col items-center">
+                    <i class="fas fa-list-alt text-xl"></i><span class="text-xs">הזמנות</span>
+                </button>
+                <button data-screen="new-order" class="bg-gradient-primary text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg -mt-8">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button data-screen="map" class="nav-btn text-gray-500 flex flex-col items-center">
+                    <i class="fas fa-map-marker-alt text-xl"></i><span class="text-xs">מפה</span>
+                </button>
+                 <button data-screen="catalog" class="nav-btn text-gray-500 flex flex-col items-center relative">
+                    <i class="fas fa-book-open text-xl"></i><span class="text-xs">קטלוג</span>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+                </button>
+            </nav>
         </main>
 
-        <!-- Bottom Navigation -->
-        <footer class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_5px_rgba(0,0,0,0.1)] max-w-lg mx-auto rounded-t-2xl">
-            <div class="flex justify-around items-center h-20">
-                <button class="nav-btn text-gray-500" data-page="dashboard-page">
-                    <i class="fas fa-home text-2xl"></i><span class="text-xs block">ראשי</span>
-                </button>
-                <button class="nav-btn text-gray-500" data-page="orders-page">
-                    <i class="fas fa-list-alt text-2xl"></i><span class="text-xs block">הזמנות</span>
-                </button>
-                
-                <button id="create-order-fab" class="bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transform -translate-y-6 hover:scale-110 transition-transform">
-                    <i class="fas fa-plus text-2xl"></i>
-                </button>
-
-                <button class="nav-btn text-gray-500" data-page="map-page">
-                    <i class="fas fa-map-marker-alt text-2xl"></i><span class="text-xs block">מפה</span>
-                </button>
-                <button class="nav-btn text-gray-500" data-page="catalog-page">
-                    <i class="fas fa-store text-2xl"></i><span class="text-xs block">קטלוג</span>
-                </button>
-            </div>
-        </footer>
-    </div>
-    <!-- S: Main Application Container -->
-
-    <!-- E: Modals & Drawers -->
-
+    </div> <!-- End App Container -->
+    
     <!-- Order Details Modal -->
-    <div id="order-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h3 class="text-lg font-bold">פרטי הזמנה</h3>
-                <button id="close-details-modal" class="text-gray-500 hover:text-gray-800">&times;</button>
-            </div>
-            <div id="order-details-content" class="p-4">
-                <!-- Details injected here -->
-            </div>
-             <div class="p-4 bg-gray-50 border-t flex space-x-2 space-x-reverse">
-                <button id="share-whatsapp-btn" class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg flex items-center justify-center"><i class="fab fa-whatsapp ml-2"></i> שתף ב-WhatsApp</button>
-                <button id="print-order-btn" class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center justify-center"><i class="fas fa-print ml-2"></i> הדפס</button>
-            </div>
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
+        <div id="order-modal-content" class="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+            <!-- Modal content will be injected here -->
         </div>
     </div>
-
-    <!-- New Order/Edit Modal -->
-    <div id="order-form-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex flex-col">
-        <div class="flex-grow overflow-y-auto bg-white">
-            <div class="p-4 bg-white sticky top-0 z-10 border-b">
-                 <div class="flex justify-between items-center">
-                    <h3 id="order-form-title" class="text-lg font-bold">יצירת הזמנה חדשה</h3>
-                    <button id="close-order-form-modal" class="text-2xl text-gray-500 hover:text-gray-800">&times;</button>
-                </div>
-            </div>
-            <form id="order-form" class="p-4 space-y-4">
-                <input type="hidden" id="orderId" name="orderId">
-                <div>
-                    <label class="font-semibold">פרויקט</label>
-                    <select name="project" id="project-select" class="w-full border rounded-lg p-2 mt-1" required></select>
-                </div>
-                <div>
-                    <label class="font-semibold">כתובת</label>
-                    <input type="text" name="address" class="w-full border rounded-lg p-2 mt-1" placeholder="הכנס כתובת או הדבק קישור Waze" required>
-                </div>
-                <div>
-                    <label class="font-semibold">סוג פעולה</label>
-                    <select name="actionType" class="w-full border rounded-lg p-2 mt-1" required>
-                        <option>הורדה</option>
-                        <option>העלאה</option>
-                        <option>החלפה</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="font-semibold">פריטים</label>
-                    <div id="order-items-container" class="space-y-2 mt-1">
-                        <!-- Items from cart or catalog will be added here -->
-                    </div>
-                     <button type="button" id="add-item-from-catalog-btn" class="mt-2 text-blue-600 font-semibold">+ הוסף פריט מהקטלוג</button>
-                </div>
-                 <div>
-                    <label class="font-semibold">הערות</label>
-                    <textarea name="notes" class="w-full border rounded-lg p-2 mt-1" rows="3"></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="p-4 bg-white border-t">
-            <button type="submit" form="order-form" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg">שמור הזמנה</button>
-        </div>
-    </div>
-
+    
     <!-- Cart Drawer -->
-    <div id="cart-drawer" class="hidden fixed inset-0 z-50">
+    <div id="cart-drawer" class="fixed inset-0 hidden z-30">
         <div id="cart-overlay" class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div id="cart-content" class="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-lg flex flex-col transform translate-x-full transition-transform">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h3 class="text-lg font-bold">סל קניות</h3>
-                <button id="close-cart-drawer" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-            <div id="cart-items" class="flex-grow p-4 overflow-y-auto">
-                <!-- Cart items will be here -->
-            </div>
-            <div class="p-4 bg-gray-50 border-t">
-                <button id="checkout-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">המשך להזמנה</button>
-            </div>
+        <div id="cart-content" class="absolute right-0 top-0 h-full w-4/5 max-w-sm bg-white shadow-xl flex flex-col transition-transform translate-x-full">
+            <!-- Cart content will be injected here -->
         </div>
     </div>
-    <!-- S: Modals & Drawers -->
-    
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
 
-    // --- STATE MANAGEMENT ---
-    let currentUser = null;
-    let orders = [];
-    let projects = [];
-    let catalog = [];
-    let notices = [];
-    let cart = [];
-    let map;
+    <script>
+        // --- CONFIGURATION ---
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-cI1kev1KsbB1S830IML9dlcEZ6vtRoROT1PsYmyo7AIZP0U2KSBS_P9gZz0vKCGZqA/exec';
 
-    // --- ELEMENTS ---
-    const loginScreen = document.getElementById('login-screen');
-    const appContainer = document.getElementById('app-container');
-    const loginForm = document.getElementById('login-form');
-    const pages = document.querySelectorAll('.page');
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const ordersListContainer = document.getElementById('orders-list');
-    const statusFilter = document.getElementById('status-filter');
-    
-    // Modals & Drawers
-    const orderDetailsModal = document.getElementById('order-details-modal');
-    const orderFormModal = document.getElementById('order-form-modal');
-    const cartDrawer = document.getElementById('cart-drawer');
+        // --- STATE ---
+        let state = {
+            client: null,
+            orders: [],
+            notices: [],
+            catalog: [],
+            cart: [],
+            currentScreen: 'login',
+        };
 
-    // --- MOCK API ---
-    // Replace GAS_WEB_APP_URL with your actual Google Apps Script Web App URL
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-cI1kev1KsbB1S830IML9dlcEZ6vtRoROT1PsYmyo7AIZP0U2KSBS_P9gZz0vKCGZqA/exec'; 
+        // --- DOM ELEMENTS ---
+        const loginScreen = document.getElementById('login-screen');
+        const mainApp = document.getElementById('main-app');
+        const contentDiv = document.getElementById('content');
+        const loginBtn = document.getElementById('login-btn');
+        // ... other elements will be selected as needed
 
-    const mockData = {
-        auth: { success: true, data: { clientId: '123', שם_לקוח: 'ישראל ישראלי', טלפון_לקוח: '972508860896', avatar_url: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', projects: [{projectName: 'פרויקט תל אביב', projectAddress: 'רוטשילד 1, תל אביב'}, {projectName: 'בנייה בהרצליה', projectAddress: 'הצדף 5, הרצליה'}] }, message: 'Login successful' },
-        listByPhone: { success: true, data: [
-            { תעודה: '1001', מספר_לקוח: '123', פרויקט: 'פרויקט תל אביב', כתובת: 'רוטשילד 1, תל אביב', כתובת_waze_link: 'https://waze.com/ul?ll=32.0632,34.7705', סוג_פעולה: 'הורדה', תאריך_הזמנה: new Date(Date.now() - 86400000).toISOString(), סטטוס: 'בוצע', פריטים: JSON.stringify([{sku: 'C1', name: 'מכולה 8 רגל', qty: 1}]), מס׳_מכולה: 'C-5871', created_at: new Date(Date.now() - 86400000*2).toISOString(), history_diff: 'נוצר בתאריך X, עודכן בתאריך Y' },
-            { תעודה: '1002', מספר_לקוח: '123', פרויקט: 'בנייה בהרצליה', כתובת: 'הצדף 5, הרצליה', כתובת_waze_link: 'https://waze.com/ul?ll=32.1648,34.8021', סוג_פעולה: 'הורדה', תאריך_הזמנה: new Date().toISOString(), סטטוס: 'בדרך', פריטים: JSON.stringify([{sku: 'C2', name: 'מכולה 10 רגל', qty: 1}]), מס׳_מכולה: 'C-9812', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-            { תעודה: '1003', מספר_לקוח: '123', פרויקט: 'פרויקט תל אביב', כתובת: 'רוטשילד 1, תל אביב', כתובת_waze_link: 'https://waze.com/ul?ll=32.0632,34.7705', סוג_פעולה: 'החלפה', תאריך_הזמנה: new Date(Date.now() + 86400000).toISOString(), סטטוס: 'ממתין לביצוע', פריטים: JSON.stringify([{sku: 'C1', name: 'מכולה 8 רגל', qty: 1}]), מס׳_מכולה: '', created_at: new Date().toISOString(), isNew: true },
-             { תעודה: '1004', מספר_לקוח: '123', פרויקט: 'בנייה בהרצליה', כתובת: 'הצדף 5, הרצליה', כתובת_waze_link: 'https://waze.com/ul?ll=32.1648,34.8021', סוג_פעולה: 'העלאה', תאריך_הזמנה: new Date(Date.now() - 86400000 * 5).toISOString(), סטטוס: 'בוטל', פריטים: JSON.stringify([{sku: 'C2', name: 'מכולה 10 רגל', qty: 1}]), מס׳_מכולה: 'C-9812', created_at: new Date(Date.now() - 86400000 * 5).toISOString() }
-        ]},
-        getNoticesForPhone: { success: true, data: [{ id: 1, title: 'עדכון חשוב', message: 'שימו לב, המערכת תרד לצורך תחזוקה ביום שישי הקרוב.', created_at: new Date().toISOString(), read_by: '' } ]},
-        listCatalog: { success: true, data: [
-            { sku: 'P001', productName: 'מלט שחור', description: 'שק 25 ק"ג', price: 15, imageUrl: 'https://placehold.co/150x150/cccccc/666666?text=מלט' },
-            { sku: 'P002', productName: 'בלוק איטונג', description: 'מידות 20x20x60', price: 8, imageUrl: 'https://placehold.co/150x150/cccccc/666666?text=בלוק' },
-            { sku: 'C1', productName: 'מכולה 8 רגל', description: 'להשכרה יומית', price: 50, imageUrl: 'https://placehold.co/150x150/cccccc/666666?text=מכולה' },
-            { sku: 'TOOL1', productName: 'פטישון', description: 'השכרת כלי עבודה', price: 100, imageUrl: 'https://placehold.co/150x150/cccccc/666666?text=פטישון' },
-        ]}
-    };
+        // --- API COMMUNICATION ---
+        async function api(action, params = {}) {
+            const url = new URL(GAS_WEB_APP_URL);
+            url.searchParams.set('action', action);
+            Object.keys(params).forEach(key => url.searchParams.set(key, params[key]));
 
-    async function api(action, params = {}) {
-        console.log(`Calling mock API: ${action}`, params);
-        return new Promise(resolve => {
-            setTimeout(() => {
-                if(mockData[action]) {
-                    resolve(mockData[action]);
-                } else {
-                    resolve({ success: false, message: `Action ${action} not found.` });
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
                 }
-            }, 500);
-        });
-        /*
-        // REAL API CALL - UNCOMMENT WHEN READY
-        const url = new URL(GAS_WEB_APP_URL);
-        url.searchParams.set('action', action);
-        Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
-        try {
-            const response = await fetch(url.toString());
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        } catch (error) {
-            console.error('API call failed:', error);
-            Swal.fire('שגיאה', 'התקשורת עם השרת נכשלה', 'error');
-            return { success: false, message: error.message };
-        }
-        */
-    }
-
-    // --- INITIALIZATION ---
-    function init() {
-        loginForm.addEventListener('submit', handleLogin);
-        setupNavigation();
-        setupModalsAndDrawers();
-        statusFilter.addEventListener('change', () => renderOrders(orders));
-    }
-    
-    // --- AUTHENTICATION ---
-    async function handleLogin(e) {
-        e.preventDefault();
-        const phone = document.getElementById('phone').value;
-        const password = document.getElementById('password').value;
-        
-        Swal.fire({ title: 'מתחבר...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        const res = await api('auth', { phone, password });
-        
-        if (res.success) {
-            currentUser = res.data;
-            projects = res.data.projects;
-            await loadInitialData();
-            loginScreen.style.display = 'none';
-            appContainer.style.display = 'flex';
-            Swal.close();
-            renderDashboard();
-            renderOrders(orders);
-        } else {
-            Swal.fire('שגיאת התחברות', res.message || 'הפרטים שהזנת שגויים', 'error');
-        }
-    }
-
-    async function loadInitialData() {
-        const [ordersRes, noticesRes, catalogRes] = await Promise.all([
-            api('listByPhone', { phone: currentUser.טלפון_לקוח }),
-            api('getNoticesForPhone', { phone: currentUser.טלפון_לקוח }),
-            api('listCatalog')
-        ]);
-        if(ordersRes.success) orders = ordersRes.data;
-        if(noticesRes.success) notices = noticesRes.data;
-        if(catalogRes.success) catalog = catalogRes.data;
-    }
-    
-    // --- NAVIGATION ---
-    function showPage(pageId) {
-        pages.forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId)?.classList.add('active');
-
-        navButtons.forEach(btn => {
-             btn.classList.toggle('text-blue-600', btn.dataset.page === pageId);
-             btn.classList.toggle('text-gray-500', btn.dataset.page !== pageId);
-        });
-
-        // Special handling for map page
-        if(pageId === 'map-page' && !map) {
-            initMap();
-        }
-        if(map) {
-           setTimeout(() => map.invalidateSize(), 100);
-        }
-    }
-
-    function setupNavigation() {
-        navButtons.forEach(btn => {
-            btn.addEventListener('click', () => showPage(btn.dataset.page));
-        });
-    }
-
-    // --- RENDERING ---
-    function renderDashboard() {
-        if (!currentUser) return;
-        document.getElementById('user-name').textContent = currentUser.שם_לקוח;
-        document.getElementById('user-avatar').src = currentUser.avatar_url;
-
-        document.getElementById('kpi-active').textContent = orders.filter(o => o.סטטוס === 'בדרך').length;
-        document.getElementById('kpi-completed').textContent = orders.filter(o => o.סטטוס === 'בוצע').length;
-        document.getElementById('kpi-pending').textContent = orders.filter(o => o.סטטוס === 'ממתין לביצוע').length;
-        document.getElementById('kpi-projects').textContent = projects.length;
-
-        // Render notices
-        const unreadNotices = notices.filter(n => !n.read_by || !n.read_by.includes(currentUser.טלפון_לקוח));
-        const notificationIconContainer = document.getElementById('notifications-icon-container');
-        if (unreadNotices.length > 0) {
-            const notice = unreadNotices[0];
-            const noticeBox = document.getElementById('notice-box');
-            document.getElementById('notice-title').textContent = notice.title;
-            document.getElementById('notice-message').textContent = notice.message;
-            noticeBox.classList.remove('hidden');
-
-            // Add blinking dot
-            const dot = document.createElement('div');
-            dot.className = 'blinking-dot';
-            notificationIconContainer.appendChild(dot);
-            
-        } else {
-            notificationIconContainer.innerHTML = '<i class="fas fa-bell text-2xl text-gray-500 cursor-pointer"></i>';
-        }
-    }
-
-    function renderOrders(ordersToRender) {
-        const filterValue = statusFilter.value;
-        const filteredOrders = filterValue === 'all' ? ordersToRender : ordersToRender.filter(o => o.סטטוס === filterValue);
-        
-        ordersListContainer.innerHTML = '';
-        if (filteredOrders.length === 0) {
-            ordersListContainer.innerHTML = `<p class="text-center text-gray-500 mt-8">לא נמצאו הזמנות.</p>`;
-            return;
-        }
-
-        filteredOrders.forEach(order => {
-            const card = document.createElement('div');
-            card.className = `bg-white p-4 rounded-lg shadow-sm border-r-4 ${getStatusColor(order.סטטוס).border} ${order.isNew ? 'new-item-highlight' : ''}`;
-            card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="font-bold text-gray-800">הזמנה #${order.תעודה}</p>
-                        <p class="text-sm text-gray-600">${order.פרויקט}</p>
-                        <p class="text-xs text-gray-400">${new Date(order.תאריך_הזמנה).toLocaleDateString('he-IL')}</p>
-                    </div>
-                    <span class="text-xs font-bold py-1 px-3 rounded-full ${getStatusColor(order.סטטוס).bg} ${getStatusColor(order.סטטוס).text}">${order.סטטוס}</span>
-                </div>
-                <div class="mt-4 flex justify-end">
-                    <button class="details-btn text-sm text-blue-600 font-semibold" data-order-id="${order.תעודה}">פרטים נוספים</button>
-                </div>
-            `;
-            ordersListContainer.appendChild(card);
-        });
-    }
-    
-    function renderCatalog() {
-        const catalogGrid = document.getElementById('catalog-grid');
-        catalogGrid.innerHTML = '';
-        catalog.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'bg-white rounded-lg shadow-sm overflow-hidden flex flex-col';
-            card.innerHTML = `
-                <img src="${item.imageUrl}" alt="${item.productName}" class="w-full h-32 object-cover">
-                <div class="p-3 flex-grow flex flex-col">
-                    <h4 class="font-bold text-sm">${item.productName}</h4>
-                    <p class="text-xs text-gray-500 flex-grow">${item.description}</p>
-                    <div class="mt-2 flex justify-between items-center">
-                        <span class="font-bold text-blue-600">₪${item.price}</span>
-                        <button class="add-to-cart-btn bg-blue-100 text-blue-700 rounded-full w-8 h-8 text-lg" data-sku="${item.sku}">+</button>
-                    </div>
-                </div>
-            `;
-            catalogGrid.appendChild(card);
-        });
-    }
-
-    function getStatusColor(status) {
-        switch (status) {
-            case 'בוצע': return { border: 'border-green-500', bg: 'bg-green-100', text: 'text-green-800' };
-            case 'בדרך': return { border: 'border-blue-500', bg: 'bg-blue-100', text: 'text-blue-800' };
-            case 'ממתין לביצוע': return { border: 'border-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-800' };
-            case 'בוטל': return { border: 'border-red-500', bg: 'bg-red-100', text: 'text-red-800' };
-            default: return { border: 'border-gray-400', bg: 'bg-gray-100', text: 'text-gray-800' };
-        }
-    }
-    
-    // --- MAP ---
-    function initMap() {
-        map = L.map('map').setView([32.0853, 34.7818], 10); // Centered on Tel Aviv
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // Add markers for orders with Waze links
-        const ordersWithLocation = orders.filter(o => o.כתובת_waze_link && o.סטטוס !== 'בוצע' && o.סטטוס !== 'בוטל');
-        ordersWithLocation.forEach(order => {
-            const coords = parseWazeLink(order.כתובת_waze_link);
-            if(coords) {
-                 const marker = L.marker(coords).addTo(map);
-                 marker.bindPopup(`<b>הזמנה #${order.תעודה}</b><br>${order.פרויקט}<br><a href="${order.כתובת_waze_link}" target="_blank">פתח ב-Waze</a>`);
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message || 'API call failed');
+                }
+                return result.data;
+            } catch (error) {
+                console.error(`API Error on action '${action}':`, error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'שגיאת תקשורת',
+                    text: error.message,
+                });
+                return null; // Return null to allow graceful failure
             }
-        });
-    }
-
-    function parseWazeLink(link) {
-        try {
-            const url = new URL(link);
-            const ll = url.searchParams.get('ll');
-            if (ll) {
-                const [lat, lon] = ll.split(',');
-                return [parseFloat(lat), parseFloat(lon)];
-            }
-            return null;
-        } catch(e) {
-            console.error("Could not parse Waze link:", link);
-            return null;
         }
-    }
-
-    // --- MODALS AND DRAWERS LOGIC ---
-    function setupModalsAndDrawers() {
-        // Order Details
-        document.getElementById('close-details-modal').addEventListener('click', () => orderDetailsModal.classList.add('hidden'));
-        ordersListContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.details-btn');
-            if (btn) {
-                showOrderDetails(btn.dataset.orderId);
-            }
-        });
-
-        // Order Form
-        document.getElementById('create-order-fab').addEventListener('click', () => showOrderForm());
-        document.getElementById('close-order-form-modal').addEventListener('click', () => orderFormModal.classList.add('hidden'));
-        document.getElementById('order-form').addEventListener('submit', handleOrderFormSubmit);
-        document.getElementById('add-item-from-catalog-btn').addEventListener('click', () => {
-            orderFormModal.classList.add('hidden');
-            showPage('catalog-page');
-        });
-
-        // Cart
-        document.getElementById('cart-icon').addEventListener('click', () => toggleCartDrawer(true));
-        document.getElementById('close-cart-drawer').addEventListener('click', () => toggleCartDrawer(false));
-        document.getElementById('cart-overlay').addEventListener('click', () => toggleCartDrawer(false));
-        document.getElementById('checkout-btn').addEventListener('click', () => {
-             toggleCartDrawer(false);
-             showOrderForm(null, cart);
-        });
-        document.getElementById('catalog-grid').addEventListener('click', (e) => {
-            const btn = e.target.closest('.add-to-cart-btn');
-            if(btn) {
-                addToCart(btn.dataset.sku);
-            }
-        });
-    }
-
-    function showOrderDetails(orderId) {
-        const order = orders.find(o => o.תעודה === orderId);
-        if (!order) return;
-
-        const items = JSON.parse(order.פריטים || '[]');
-        let itemsHtml = items.map(item => `<li>${item.qty} x ${item.name} (${item.sku})</li>`).join('');
-
-        let historyHtml = 'לא נמצאה היסטוריה';
-        if (order.history_diff) {
-            // Simple display of history, can be improved with parsing
-            historyHtml = order.history_diff.split(',').map(h => `<p class="text-xs text-gray-500">${h.trim()}</p>`).join('');
-            // Example for new/old text as per spec
-            historyHtml += `<p class="text-xs text-gray-500"><span class="text-green-600">* שדה חדש</span> <span class="line-through">טקסט ישן</span></p>`;
-        }
-
-        document.getElementById('order-details-content').innerHTML = `
-            <p><strong>פרויקט:</strong> ${order.פרויקט}</p>
-            <p><strong>כתובת:</strong> ${order.כתובת}</p>
-            <p><strong>סוג פעולה:</strong> ${order.סוג_פעולה}</p>
-            <p><strong>סטטוס:</strong> <span class="${getStatusColor(order.סטטוס).text}">${order.סטטוס}</span></p>
-            <p><strong>מספר מכולה:</strong> ${order.מס׳_מכולה || 'טרם שויך'}</p>
-            <p><strong>תאריך הזמנה:</strong> ${new Date(order.תאריך_הזמנה).toLocaleString('he-IL')}</p>
-            <div class="mt-4">
-                <h4 class="font-bold">פריטים:</h4>
-                <ul class="list-disc list-inside">${itemsHtml}</ul>
-            </div>
-            <div class="mt-4">
-                <h4 class="font-bold">היסטוריית שינויים:</h4>
-                ${historyHtml}
-            </div>
-        `;
-
-        document.getElementById('share-whatsapp-btn').onclick = () => shareOrderToWhatsapp(order);
-        document.getElementById('print-order-btn').onclick = () => printOrder(order);
-
-        orderDetailsModal.classList.remove('hidden');
-    }
-
-    function showOrderForm(orderId = null, itemsFromCart = []) {
-        document.getElementById('order-form').reset();
-        const projectSelect = document.getElementById('project-select');
-        projectSelect.innerHTML = projects.map(p => `<option value="${p.projectName}">${p.projectName}</option>`).join('');
         
-        const itemsContainer = document.getElementById('order-items-container');
-        itemsContainer.innerHTML = '';
-        
-        if (orderId) { // Editing existing order
-            document.getElementById('order-form-title').textContent = 'עריכת הזמנה';
-            const order = orders.find(o => o.תעודה === orderId);
-            // ... populate form fields from order object ...
-        } else { // New order
-            document.getElementById('order-form-title').textContent = 'יצירת הזמנה חדשה';
-            document.getElementById('orderId').value = '';
-            
-            if (itemsFromCart.length > 0) {
-                 itemsFromCart.forEach(item => {
-                    const product = catalog.find(p => p.sku === item.sku);
-                    addOrderItemToForm(product, item.qty);
-                 });
+        // --- LOGIN LOGIC ---
+        async function handleLogin() {
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            if (!phone || !password) {
+                Swal.fire('שדות חסרים', 'נא למלא מספר טלפון וסיסמה', 'warning');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מתחבר...';
+
+            const clientData = await api('auth', { phone, password });
+
+            if (clientData) {
+                state.client = clientData;
+                await initializeMainApp();
             } else {
-                itemsContainer.innerHTML = '<p class="text-sm text-gray-500">הסל ריק. ניתן להוסיף פריטים מהקטלוג.</p>';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> כניסה';
             }
         }
-        orderFormModal.classList.remove('hidden');
-    }
-    
-    function addOrderItemToForm(product, quantity) {
-        const itemsContainer = document.getElementById('order-items-container');
-        // Clear placeholder if it exists
-        if(itemsContainer.querySelector('p')) itemsContainer.innerHTML = '';
         
-        const itemHtml = `
-            <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                <span>${product.productName}</span>
-                <input type="number" class="w-16 text-center border rounded" value="${quantity}" min="1">
-            </div>
-        `;
-        itemsContainer.insertAdjacentHTML('beforeend', itemHtml);
-    }
-    
-    async function handleOrderFormSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const orderData = Object.fromEntries(formData.entries());
-        // ... gather items from form ...
-        
-        Swal.fire({ title: 'שומר הזמנה...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        const action = orderData.orderId ? 'updateOrder' : 'createOrder';
-        const res = await api(action, orderData);
+        // --- APP INITIALIZATION ---
+        async function initializeMainApp() {
+            document.getElementById('client-name').textContent = state.client['שם_לקוח'];
+            
+            // Fetch initial data
+            const [orders, notices, catalog] = await Promise.all([
+                api('listByPhone', { phone: state.client['טלפון_לקוח'] }),
+                api('getNoticesForPhone', { phone: state.client['טלפון_לקוח'] }),
+                api('listCatalog')
+            ]);
+            
+            state.orders = orders || [];
+            state.notices = notices || [];
+            state.catalog = catalog || [];
+            
+            // Animate transition
+            loginScreen.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            mainApp.classList.add('fade-in', 'flex');
 
-        if (res.success) {
-            orderFormModal.classList.add('hidden');
-            Swal.fire('הצלחה!', 'ההזמנה נשמרה בהצלחה', 'success');
-            await loadInitialData(); // Refresh data
-            renderOrders(orders);
-            showPage('orders-page');
-        } else {
-            Swal.fire('שגיאה', 'שמירת ההזמנה נכשלה', 'error');
+            setupNavigation();
+            navigateTo('home');
+            startTypingEffect();
+            updateNoticeDot();
         }
-    }
-
-
-    // --- CART LOGIC ---
-    function addToCart(sku) {
-        const existingItem = cart.find(item => item.sku === sku);
-        if (existingItem) {
-            existingItem.qty++;
-        } else {
-            cart.push({ sku: sku, qty: 1 });
-        }
-        updateCartDisplay();
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'פריט נוסף לסל',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    }
-
-    function updateCartDisplay() {
-        const cartCount = document.getElementById('cart-count');
-        const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-        cartCount.textContent = totalItems;
-        cartCount.classList.toggle('hidden', totalItems === 0);
         
-        const cartItemsContainer = document.getElementById('cart-items');
-        if (totalItems === 0) {
-            cartItemsContainer.innerHTML = `<p class="text-center text-gray-500 mt-8">סל הקניות שלך ריק.</p>`;
-        } else {
-            cartItemsContainer.innerHTML = cart.map(item => {
-                const product = catalog.find(p => p.sku === item.sku);
-                return `
-                    <div class="flex items-center justify-between py-2 border-b">
-                        <div>
-                            <p class="font-semibold">${product.productName}</p>
-                            <p class="text-sm text-gray-500">₪${product.price}</p>
+        // --- NAVIGATION ---
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn, [data-screen="new-order"]').forEach(btn => {
+                btn.addEventListener('click', () => navigateTo(btn.dataset.screen));
+            });
+        }
+        
+        function navigateTo(screen) {
+            state.currentScreen = screen;
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                 if (btn.dataset.screen === screen) {
+                     btn.classList.add('text-green-600');
+                 } else {
+                     btn.classList.remove('text-green-600');
+                 }
+            });
+
+            contentDiv.innerHTML = ''; // Clear previous content
+            
+            switch (screen) {
+                case 'home':
+                    renderHomeScreen();
+                    break;
+                case 'orders':
+                    renderOrdersScreen();
+                    break;
+                case 'map':
+                    renderMapScreen();
+                    break;
+                case 'catalog':
+                    renderCatalogScreen();
+                    break;
+                case 'new-order':
+                    renderNewOrderScreen();
+                    break;
+            }
+        }
+        
+        // --- RENDERING FUNCTIONS (Templates) ---
+        function renderHomeScreen() {
+            contentDiv.innerHTML = `
+                <div class="fade-in">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-blue-100 p-4 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-blue-800">${state.orders.filter(o=>o.סטטוס !== 'בוצע' && o.סטטוס !== 'בוטל').length}</p>
+                            <p class="text-sm text-blue-600">הזמנות פעילות</p>
                         </div>
-                        <div class="flex items-center">
-                           <input type="number" value="${item.qty}" class="w-16 text-center border rounded">
+                        <div class="bg-green-100 p-4 rounded-lg text-center">
+                            <p class="text-3xl font-bold text-green-800">${state.orders.filter(o=>o.סטטוס === 'בוצע').length}</p>
+                            <p class="text-sm text-green-600">הזמנות שהושלמו</p>
                         </div>
                     </div>
-                `;
-            }).join('');
-        }
-    }
-
-    function toggleCartDrawer(open) {
-        const cartContent = document.getElementById('cart-content');
-        if(open) {
-            updateCartDisplay();
-            renderCatalog();
-            cartDrawer.classList.remove('hidden');
-            setTimeout(() => {
-                cartContent.classList.remove('translate-x-full');
-            }, 10);
-        } else {
-            cartContent.classList.add('translate-x-full');
-            setTimeout(() => {
-                cartDrawer.classList.add('hidden');
-            }, 300);
-        }
-    }
-
-    // --- SHARING & PRINTING ---
-    function shareOrderToWhatsapp(order) {
-        const items = JSON.parse(order.פריטים || '[]').map(i => `* ${i.qty} x ${i.name}`).join('\n');
-        const text = `*הזמנה חדשה*
-לקוח: ${currentUser.שם_לקוח} (#${currentUser.clientId})
-פרויקט: ${order.פרויקט}
-כתובת: ${order.כתובת}
-פעולה: ${order.סוג_פעולה}
-פריטים:
-${items}
-
-להגעה: ${order.כתובת_waze_link || 'לא זמין'}
-`;
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-        window.open(whatsappUrl, '_blank');
-    }
-
-    function printOrder(order) {
-        const items = JSON.parse(order.פריטים || '[]').map(i => `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.qty}</td></tr>`).join('');
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html><head><title>הדפסת הזמנה ${order.תעודה}</title>
-            <style>
-                body { font-family: 'Rubik', sans-serif; direction: rtl; }
-                .container { max-width: 800px; margin: auto; padding: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-                th { background-color: #f2f2f2; }
-                .new-item { background-color: #fef9c3; }
-            </style>
-            </head><body>
-            <div class="container">
-                <h1>הזמנה מספר: ${order.תעודה}</h1>
-                <p><strong>לקוח:</strong> ${currentUser.שם_לקוח}</p>
-                <p><strong>פרויקט:</strong> ${order.פרויקט}</p>
-                <p><strong>כתובת:</strong> ${order.כתובת}</p>
-                <h2>פריטים</h2>
-                <table><thead><tr><th>מק"ט</th><th>שם</th><th>כמות</th></tr></thead><tbody>${items}</tbody></table>
-                <div style="margin-top: 40px;">
-                    <p>חתימת לקוח: ___________________</p>
+                    <h2 class="font-semibold text-lg mb-2">הודעות אחרונות</h2>
+                    <div id="notices-container" class="space-y-2">
+                        ${state.notices.length > 0 ? state.notices.map(n => `
+                            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md">
+                                <p class="font-bold">${n.title}</p>
+                                <p>${n.message}</p>
+                            </div>
+                        `).join('') : '<p class="text-gray-500">אין הודעות חדשות.</p>'}
+                    </div>
                 </div>
-            </div>
-            </body></html>
-        `);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => { printWindow.print(); }, 500);
-    }
+            `;
+        }
 
-    // --- START THE APP ---
-    init();
-});
-</script>
+        function renderOrdersScreen() {
+             contentDiv.innerHTML = `
+                <div class="fade-in">
+                    <div id="orders-list" class="space-y-3">
+                        ${state.orders.length > 0 ? state.orders.map(orderCard).join('') : '<p class="text-gray-500 text-center mt-8">לא נמצאו הזמנות.</p>'}
+                    </div>
+                </div>
+            `;
+            document.querySelectorAll('.order-card').forEach(card => {
+                card.addEventListener('click', () => showOrderDetails(card.dataset.orderId));
+            });
+        }
+        
+        function orderCard(order, isNew = false) {
+            const statusStyles = {
+                'ממתין לביצוע': 'bg-yellow-500',
+                'בדרך': 'bg-blue-500',
+                'בוצע': 'bg-green-500',
+                'בוטל': 'bg-red-500',
+            };
+            return `
+                <div class="order-card bg-white p-4 rounded-lg shadow-md border-l-4 ${statusStyles[order.סטטוס] || 'bg-gray-500'}" data-order-id="${order.תעודה}" ${isNew ? 'class="highlight-new"' : ''}>
+                    <div class="flex justify-between items-center">
+                        <p class="font-bold text-lg">${order.פרויקט}</p>
+                        <p class="text-sm text-gray-500">${order.תעודה}</p>
+                    </div>
+                    <p class="text-gray-600">${order.כתובת}</p>
+                    <div class="flex justify-between items-center mt-2">
+                         <span class="text-sm font-semibold text-white px-2 py-1 rounded-full ${statusStyles[order.סטטוס] || 'bg-gray-500'}">${order.סטטוס}</span>
+                        <span class="text-sm text-gray-500">${dayjs(order.תאריך_הזמנה).format('DD/MM/YYYY')}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderMapScreen() {
+            contentDiv.innerHTML = `<div id="map-container" class="h-full w-full rounded-lg" style="height: 60vh;"></div>`;
+            setTimeout(() => { // Allow DOM to update before initializing map
+                const map = L.map('map-container').setView([32.0853, 34.7818], 8); // Centered on Tel Aviv
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                // Placeholder for adding markers
+                L.marker([32.0853, 34.7818]).addTo(map).bindPopup('מכולה בפרויקט תל אביב');
+            }, 100);
+        }
+
+        function renderCatalogScreen() {
+             contentDiv.innerHTML = `
+                <div class="fade-in">
+                    <h2 class="text-xl font-semibold mb-4">קטלוג מוצרים</h2>
+                    <div id="catalog-grid" class="grid grid-cols-2 gap-4">
+                        ${state.catalog.map(productCard).join('')}
+                    </div>
+                </div>
+            `;
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sku = e.currentTarget.dataset.sku;
+                    addToCart(sku);
+                });
+            });
+             document.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Logic to show product details if needed
+                });
+            });
+        }
+        
+        function productCard(product) {
+            return `
+                <div class="product-card bg-white p-3 rounded-lg shadow cursor-pointer">
+                    <img src="${product.imageUrl || 'https://placehold.co/300x200?text=No+Image'}" class="w-full h-24 object-cover rounded-md mb-2">
+                    <h3 class="font-semibold text-sm">${product.productName}</h3>
+                    <p class="text-xs text-gray-500 mb-2">${product.description}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-green-600">₪${product.price}</span>
+                        <button class="add-to-cart-btn bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center" data-sku="${product.sku}">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // --- ORDER DETAILS MODAL ---
+        function showOrderDetails(orderId) {
+             const order = state.orders.find(o => o.תעודה === orderId);
+             if (!order) return;
+             const modal = document.getElementById('order-modal');
+             const modalContent = document.getElementById('order-modal-content');
+
+             let itemsHtml = 'אין פריטים';
+             try {
+                const items = JSON.parse(order.פריטים);
+                if (Array.isArray(items) && items.length > 0) {
+                    itemsHtml = `<ul>${items.map(item => `<li>- ${item.name} (כמות: ${item.qty})</li>`).join('')}</ul>`;
+                }
+             } catch (e) { console.error('Could not parse items JSON'); }
+             
+             modalContent.innerHTML = `
+                <header class="p-4 bg-gray-100 rounded-t-lg flex justify-between items-center">
+                    <h2 class="font-semibold text-lg">פרטי הזמנה ${order.תעודה}</h2>
+                    <button id="close-modal-btn" class="text-gray-500 text-2xl">&times;</button>
+                </header>
+                <div class="p-4 overflow-y-auto">
+                    <p><strong>פרויקט:</strong> ${order.פרויקט}</p>
+                    <p><strong>כתובת:</strong> ${order.כתובת}</p>
+                    <p><strong>סטטוס:</strong> ${order.סטטוס}</p>
+                    <p><strong>תאריך:</strong> ${dayjs(order.תאריך_הזמנה).format('DD/MM/YYYY')}</p>
+                    <p><strong>מספר מכולה:</strong> ${order['מס׳_מכולה'] || 'לא שויך'}</p>
+                    <div class="mt-2 p-2 bg-gray-50 rounded">
+                        <h3 class="font-semibold mb-1">פריטים:</h3>
+                        ${itemsHtml}
+                    </div>
+                </div>
+                <footer class="p-3 bg-gray-100 rounded-b-lg grid grid-cols-2 gap-2">
+                    <button class="bg-green-500 text-white p-2 rounded-lg"><i class="fab fa-whatsapp"></i> שתף בווטסאפ</button>
+                    <button class="bg-blue-500 text-white p-2 rounded-lg"><i class="fas fa-print"></i> הדפס</button>
+                </footer>
+             `;
+
+             modal.classList.remove('hidden');
+             modal.classList.add('flex');
+             document.getElementById('close-modal-btn').addEventListener('click', () => modal.classList.add('hidden'));
+        }
+
+        // --- CART LOGIC ---
+        function addToCart(sku, quantity = 1) {
+            const product = state.catalog.find(p => p.sku === sku);
+            if (!product) return;
+            
+            const existingItem = state.cart.find(item => item.sku === sku);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                state.cart.push({ ...product, quantity });
+            }
+            updateCartUI();
+            
+            // Show confirmation
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
+            Toast.fire({
+                icon: 'success',
+                title: `${product.productName} נוסף לסל`
+            });
+        }
+        
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalItems > 0) {
+                cartCount.textContent = totalItems;
+                cartCount.classList.remove('hidden');
+            } else {
+                cartCount.classList.add('hidden');
+            }
+        }
+        
+        // --- MISC ---
+        function startTypingEffect() {
+            const notice = state.notices.length > 0 ? state.notices[0].title : "אין עדכונים חדשים";
+            const typingElement = document.getElementById('typing-notice');
+            let i = 0;
+            typingElement.innerHTML = "";
+            function type() {
+                if (i < notice.length) {
+                    typingElement.innerHTML += notice.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                }
+            }
+            type();
+        }
+        
+        function updateNoticeDot() {
+            // Placeholder: logic to check if notices are unread
+            if (state.notices.length > 0) {
+                 document.getElementById('notice-dot').classList.remove('hidden');
+            } else {
+                document.getElementById('notice-dot').classList.add('hidden');
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        loginBtn.addEventListener('click', handleLogin);
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+
+    </script>
 </body>
 </html>
+
