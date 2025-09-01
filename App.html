@@ -245,6 +245,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 
+            // URL of the Google Apps Script API
             const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbySlBiMdN2PyqG151h_urG7Hp_yz-v2XBhT9WCdrE7WEWKYAOHhJSIXeqZLRth5DvR_DA/exec';
             
             const loginView = document.getElementById('login-view');
@@ -266,26 +267,37 @@
             let appData = { colors: [], orders: [], containers: [] };
             let currentUser = {};
 
-            // Mock data for demonstration
-            const mockData = {
-                customerId: '12345',
-                name: 'ערן אזולאי',
-                orders: [
-                    { orderId: 'ORD001', customerName: 'ערן אזולאי', project: 'פרויקט החלפת גגות', timestamp: '2025-08-10', status: 'סופקה', totalAmount: '1200', containerId: 'C-01'},
-                    { orderId: 'ORD002', customerName: 'ערן אזולאי', project: 'שיפוץ חדר אמבטיה', timestamp: '2025-08-15', status: 'חדשה', totalAmount: '800', containerId: 'C-02'},
-                    { orderId: 'ORD003', customerName: 'ערן אזולאי', project: 'פרויקט החלפת גגות', timestamp: '2025-08-01', status: 'סופקה', totalAmount: '1500', containerId: 'C-01'},
-                    { orderId: 'ORD004', customerName: 'לקוח אחר', project: 'פרויקט חדש', timestamp: '2025-08-20', status: 'חדשה', totalAmount: '900', containerId: 'C-03'},
-                ],
-                containers: [
-                    { containerId: 'C-01', status: 'סופקה', site: 'אנקורים 2, רמת גן', dateOut: '2025-08-10'},
-                    { containerId: 'C-02', status: 'בטיפול', site: 'אנקורים 2, רמת גן', dateOut: '2025-08-15'},
-                ]
-            };
-
-            async function apiCall(action, params = {}) {
-                // In a real app, this would be an actual API call.
-                // For this example, we return mock data.
-                return mockData;
+            // API Call with exponential backoff
+            async function apiCall(action, params = {}, retries = 0) {
+                const formData = new FormData();
+                formData.append('action', action);
+                for (const key in params) {
+                    if (typeof params[key] === 'object' && params[key] !== null) {
+                        formData.append(key, JSON.stringify(params[key]));
+                    } else {
+                        formData.append(key, params[key]);
+                    }
+                }
+                
+                try {
+                    const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    if (result.status === 'error') {
+                        if (result.message.includes('Service invoked too many times') && retries < 5) {
+                            const delay = Math.pow(2, retries) * 1000;
+                            console.warn(`API rate limit exceeded, retrying in ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return apiCall(action, params, retries + 1);
+                        }
+                        throw new Error(result.message);
+                    }
+                    return result.data;
+                } catch (error) {
+                    console.error('API Call Error:', action, error);
+                    showPopup(error.message.includes('Failed to fetch') ? 'שגיאת רשת.' : `שגיאה בפעולה: ${error.message}`);
+                    throw error;
+                }
             }
 
             function showPopup(message, duration = 3000) {
@@ -324,14 +336,19 @@
                 loginBtn.disabled = true;
                 loginBtn.textContent = 'מתחבר...';
                 try {
-                    // Simulating a successful login
-                    currentUser = { customerId: '12345', name: 'ערן אזולאי' }; // Hardcoded for example
-                    appData = await apiCall('getAppData', { customerId: currentUser.customerId });
-
+                    const phone = document.getElementById('phone-input').value;
+                    const password = document.getElementById('password-input').value;
+                    
+                    const loginResult = await apiCall('login', { phone, password });
+                    currentUser = loginResult;
+                    
                     loginView.classList.remove('active');
                     mainAppView.classList.add('active');
                     
                     applySavedTheme();
+                    showPopup('טוען נתונים...');
+                    
+                    appData = await apiCall('getAppData', { customerId: currentUser.customerId });
                     updateSummariesAndBadges(appData);
                     document.getElementById('user-name-display').textContent = currentUser.name || "משתמש";
                     
@@ -346,36 +363,32 @@
                 }
             }
             
-            // New function to display a full customer profile
+            // Function to display a full customer profile
             function showCustomerProfile(customerData) {
                 const modal = document.getElementById('customer-profile-modal');
                 if (!customerData) return;
 
                 document.getElementById('customer-profile-name').textContent = `פרופיל לקוח: ${customerData.name}`;
 
-                // Filter orders and containers for this customer
                 const customerOrders = appData.orders.filter(o => o.customerName === customerData.name);
                 const customerContainers = appData.containers.filter(c => customerOrders.some(o => o.containerId === c.containerId));
 
-                // Analyze customer data
                 const totalOrders = customerOrders.length;
                 const openOrders = customerOrders.filter(o => o.status === 'חדשה' || o.status === 'בטיפול').length;
                 const overdueOrders = customerContainers.filter(c => {
                     const orderDate = new Date(c.dateOut);
                     const today = new Date();
                     const daysPassed = Math.floor((today - orderDate) / (1000 * 60 * 60 * 24));
-                    return daysPassed > 10; // Overdue if > 10 days
+                    return daysPassed > 10;
                 }).length;
                 const lastOrder = customerOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
                 const lastOrderDate = lastOrder ? new Date(lastOrder.timestamp).toLocaleDateString('he-IL') : 'N/A';
 
-                // Populate the summary cards
                 document.getElementById('profile-total-orders').textContent = totalOrders;
                 document.getElementById('profile-open-orders').textContent = openOrders;
                 document.getElementById('profile-overdue-orders').textContent = overdueOrders;
                 document.getElementById('profile-last-order-date').textContent = lastOrderDate;
                 
-                // Populate active containers
                 const containersList = document.getElementById('profile-containers-list');
                 containersList.innerHTML = '';
                 if (customerContainers.length > 0) {
@@ -396,7 +409,6 @@
                     containersList.innerHTML = '<p class="text-secondary text-center">אין מכולות פעילות כרגע.</p>';
                 }
 
-                // Populate order history
                 const ordersList = document.getElementById('profile-orders-list');
                 ordersList.innerHTML = '';
                 if (customerOrders.length > 0) {
@@ -667,14 +679,15 @@
                     button.addEventListener('click', (e) => { const modal = e.target.closest('.modal'); if (modal) closeModal(modal.id); });
                 });
                 
-                customerSearchInput.addEventListener('input', (e) => {
+                customerSearchInput.addEventListener('input', async (e) => {
                     const query = e.target.value.toLowerCase();
                     if (query.length > 2) {
-                        const results = appData.orders.filter(order =>
-                            order.customerName.toLowerCase().includes(query) ||
-                            order.project.toLowerCase().includes(query)
-                        );
-                        renderSearchResults(results);
+                        try {
+                            const results = await apiCall('searchCustomers', { query });
+                            renderSearchResults(results);
+                        } catch (error) {
+                            searchResultsContainer.innerHTML = '<p class="text-red-500">שגיאה בחיפוש לקוחות.</p>';
+                        }
                     } else {
                         searchResultsContainer.innerHTML = '';
                     }
@@ -683,7 +696,7 @@
             
             function renderSearchResults(results) {
                 searchResultsContainer.innerHTML = '';
-                if (results.length === 0) {
+                if (!results || results.length === 0) {
                     searchResultsContainer.innerHTML = '<p class="text-secondary">לא נמצאו תוצאות.</p>';
                     return;
                 }
