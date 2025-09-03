@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/locale/he.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/relativeTime.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -130,6 +131,10 @@
         .neumorphism-btn:active {
             box-shadow: inset 3px 3px 6px #d5d9e0, inset -3px -3px 6px #ffffff;
         }
+        .overdue-alert {
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+            border-color: #ef4444 !important;
+        }
     </style>
 </head>
 <body class="flex justify-center items-center h-screen bg-gray-200">
@@ -194,6 +199,16 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-4">הזמנות אחרונות</h2>
                         <div id="recent-orders-list"></div>
                     </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        <div class="p-4 rounded-lg bg-white glass-effect">
+                            <h3 class="text-md font-bold mb-2">הזמנות לפי סוג</h3>
+                            <canvas id="order-type-chart"></canvas>
+                        </div>
+                        <div class="p-4 rounded-lg bg-white glass-effect">
+                            <h3 class="text-md font-bold mb-2">סטטוס הזמנות</h3>
+                            <canvas id="order-status-chart"></canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="orders-page" class="page">
@@ -214,7 +229,7 @@
                          <div class="flex justify-between items-center mb-6">
                             <div class="step-icon-container flex-1 relative flex justify-between items-center">
                                 <div class="w-full absolute border-b-2 border-dashed border-gray-300 top-1/2 -translate-y-1/2"></div>
-                                <div id="step-icon-1" class="step-icon active z-10">1</div>
+                                <div id="step-icon-1" class="step-icon z-10">1</div>
                                 <div id="step-icon-2" class="step-icon z-10">2</div>
                                 <div id="step-icon-3" class="step-icon z-10">3</div>
                             </div>
@@ -224,13 +239,13 @@
                 </div>
             </div>
 
-            <nav class="grid grid-cols-2 p-2 bg-white border-t shadow-inner mt-auto relative">
+            <nav class="grid grid-cols-5 p-2 bg-white border-t shadow-inner mt-auto relative">
+                <button data-screen="dashboard" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-chart-line text-xl"></i><span class="text-xs mt-1">לוח בקרה</span></button>
                 <button data-screen="containers" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-dumpster text-xl"></i><span class="text-xs mt-1">מכולות</span></button>
-                <button data-screen="materials" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-hard-hat text-xl"></i><span class="text-xs mt-1">חומרי בניין</span></button>
-                <div class="new-order-btn-wrapper">
+                <div class="col-span-1 flex justify-center items-center">
                     <button id="new-order-btn" class="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg transform hover:scale-110 transition -mt-8"><i class="fas fa-plus"></i></button>
                 </div>
-                <button data-screen="projects" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-building-user text-xl"></i><span class="text-xs mt-1">פרויקטים</span></button>
+                <button data-screen="materials" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-hard-hat text-xl"></i><span class="text-xs mt-1">חומרים</span></button>
                 <button data-screen="orders" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-clipboard-list text-xl"></i><span class="text-xs mt-1">הזמנות</span></button>
             </nav>
         </main>
@@ -440,6 +455,68 @@
                         ${this.getStatusBadge(order.סטטוס)}
                     </div>
                  `).join('');
+
+                 this.renderCharts();
+            },
+
+            renderCharts() {
+                const orderTypes = (this.state.data.newOrders || []).map(o => o['סוג פעולה']);
+                const typeCounts = orderTypes.reduce((acc, type) => {
+                    acc[type] = (acc[type] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const typeChartCtx = document.getElementById('order-type-chart').getContext('2d');
+                new Chart(typeChartCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(typeCounts),
+                        datasets: [{
+                            data: Object.values(typeCounts),
+                            backgroundColor: ['#1F9D55', '#37B372', '#212529'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: { family: 'Rubik' }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                const orderStatuses = [...(this.state.data.newOrders || []), ...(this.state.data.activeContainers || [])].map(o => o.סטטוס);
+                const statusCounts = orderStatuses.reduce((acc, status) => {
+                    acc[status] = (acc[status] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const statusChartCtx = document.getElementById('order-status-chart').getContext('2d');
+                new Chart(statusChartCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#1F9D55', '#E5A500', '#EF4444', '#6B7280'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: { family: 'Rubik' }
+                                }
+                            }
+                        }
+                    }
+                });
             },
 
             renderOrders() {
@@ -487,6 +564,9 @@
                              <p class="text-sm"><strong class="font-medium">מספר מכולה:</strong> ${containerNumber}</p>
                              <p class="text-sm"><strong class="font-medium">סוג פעולה:</strong> ${order['סוג פעולה'] || 'לא רלוונטי'}</p>
                              <p class="text-sm"><strong class="font-medium">כתובת:</strong> ${order.כתובת || 'לא רלוונטי'}</p>
+                        </div>
+                        <div class="flex justify-end mt-4">
+                            <button class="bg-gray-200 text-gray-700 py-1 px-3 rounded-lg hover:bg-gray-300 transition">שכפול הזמנה</button>
                         </div>
                     </div>
                 `}).join('');
