@@ -110,6 +110,26 @@
             66% { content: '..'; }
             100% { content: '...'; }
         }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .neumorphism-btn {
+            background: #f0f4f8;
+            border-radius: 12px;
+            box-shadow: 6px 6px 12px #d5d9e0, -6px -6px 12px #ffffff;
+            transition: all 0.2s ease-in-out;
+        }
+        .neumorphism-btn:hover {
+            box-shadow: 3px 3px 6px #d5d9e0, -3px -3px 6px #ffffff;
+        }
+        .neumorphism-btn:active {
+            box-shadow: inset 3px 3px 6px #d5d9e0, inset -3px -3px 6px #ffffff;
+        }
     </style>
 </head>
 <body class="flex justify-center items-center h-screen bg-gray-200">
@@ -150,19 +170,19 @@
             
             <div id="content" class="flex-grow p-4 overflow-y-auto">
                 <div id="dashboard-page" class="page active">
-                    <div class="p-4 rounded-lg bg-gray-100 mb-6">
+                    <div class="p-4 rounded-lg bg-gray-100 mb-6 glass-effect">
                         <h1 id="client-greeting" class="text-2xl font-bold text-primary mb-2">ברוכים הבאים, <span id="client-name"></span></h1>
                         <p id="live-clock" class="text-sm text-gray-500"></p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-white p-4 rounded-lg shadow-md card-glow flex items-center gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow-md card-glow flex items-center gap-4 glass-effect">
                             <div class="bg-blue-100 text-blue-600 rounded-full h-12 w-12 flex items-center justify-center"><i class="fa-solid fa-truck-ramp-box text-2xl"></i></div>
                             <div>
                                 <p class="text-gray-500 text-sm">מכולות פעילות</p>
                                 <p id="kpi-active" class="text-2xl font-extrabold text-gray-800">0</p>
                             </div>
                         </div>
-                        <div class="bg-white p-4 rounded-lg shadow-md card-glow flex items-center gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow-md card-glow flex items-center gap-4 glass-effect">
                             <div class="bg-yellow-100 text-yellow-600 rounded-full h-12 w-12 flex items-center justify-center"><i class="fa-solid fa-hourglass-half text-2xl"></i></div>
                             <div>
                                 <p class="text-gray-500 text-sm">הזמנות לביצוע</p>
@@ -170,7 +190,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow-md mt-6">
+                    <div class="bg-white p-4 rounded-lg shadow-md mt-6 glass-effect">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">הזמנות אחרונות</h2>
                         <div id="recent-orders-list"></div>
                     </div>
@@ -178,6 +198,9 @@
 
                 <div id="orders-page" class="page">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">היסטוריית הזמנות</h2>
+                    <div class="mb-4">
+                        <input type="text" id="order-search" placeholder="חפש לפי פרויקט, תעודה, סטטוס..." class="w-full p-2 border rounded-lg neumorphism-btn">
+                    </div>
                     <div id="orders-list" class="space-y-4"></div>
                 </div>
 
@@ -187,7 +210,7 @@
                 </div>
                 
                 <div id="new-order-page" class="page">
-                     <div id="new-order-form" class="bg-white p-4 rounded-lg shadow-md">
+                     <div id="new-order-form" class="bg-white p-4 rounded-lg shadow-md glass-effect">
                          <div class="flex justify-between items-center mb-6">
                             <div class="step-icon-container flex-1 relative flex justify-between items-center">
                                 <div class="w-full absolute border-b-2 border-dashed border-gray-300 top-1/2 -translate-y-1/2"></div>
@@ -216,7 +239,8 @@
     </div>
     
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwATXstjAxibeGvwdyo9r7igA4Ng46srYKH3_r8qRlRW5iSRSeZRjzVEoEysbe3pQTHCA/exec';
+        const SPREADSHEET_ID = '1o5A2cNJSoAOVCymFDhPW---10EgH9zu5iyBE5fIt8Jw';
+        const API_URL = `https://script.google.com/macros/s/AKfycbzDVoU0Mi5uJ9ULF17GlO88d1Bd6iIo_plpw2oRSGLZuCMiuApQXQYK8geRUahVTBdv/exec`;
 
         const App = {
             state: {
@@ -225,7 +249,6 @@
                 data: null,
                 newOrder: { type: null, step: 1, project: null, items: [] },
                 
-                // Mock data for products and projects
                 mockData: {
                     projects: [
                         { projectName: 'פרויקט אלנבי', projectAddress: 'ויצמן 4, רעננה' },
@@ -286,35 +309,41 @@
                 document.getElementById('call-dept-btn').addEventListener('click', () => {
                     window.location.href = 'tel:097602010';
                 });
+                document.getElementById('send-order-btn-dropdown').addEventListener('click', () => this.navigateTo('new-order'));
+                document.getElementById('send-question-btn-dropdown').addEventListener('click', () => Swal.fire('פונקציה בפיתוח', 'ניתן ליצור קשר בוואטסאפ או בטלפון.', 'info'));
             },
 
             async handleLogin() {
                 const phone = document.getElementById('phone').value.trim();
                 const password = document.getElementById('password').value.trim();
                 const loginBtn = document.getElementById('login-btn');
-                if (!phone || password !== 'סבן') return Swal.fire({ icon: 'error', title: 'שגיאה', text: 'מספר טלפון או סיסמה שגויים.' });
+                if (!phone || password !== 'סבן') {
+                    return Swal.fire({ icon: 'error', title: 'שגיאה', text: 'מספר טלפון או סיסמה שגויים.' });
+                }
                 loginBtn.disabled = true;
                 loginBtn.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i> מתחבר...`;
                 
-                // Assume the API handles authentication and returns user data
-                // For this example, we'll use a mock user
-                const mockUser = {
-                    'שם_לקוח': 'מוחמד/שארק',
-                    'טלפון_לקוח': '972508860896',
-                    'avatar_url': 'https://i.ibb.co/V9h45jY/avatar.png'
-                };
-                
-                this.state.user = mockUser;
-                document.getElementById('client-avatar').src = this.state.user.avatar_url;
-
-                await this.fetchInitialData();
-                this.initializeApp();
+                try {
+                    const user = await this.api('auth', { phone, password });
+                    if (user) {
+                        this.state.user = user;
+                        document.getElementById('client-avatar').src = this.state.user.avatar_url;
+                        await this.fetchInitialData();
+                        this.initializeApp();
+                    } else {
+                        throw new Error('User data not returned');
+                    }
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'שגיאה', text: 'ההתחברות נכשלה. נסה שוב.', confirmButtonText: 'אישור' });
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = `כניסה למערכת`;
+                }
             },
 
             async fetchInitialData() {
-                 const phone = this.state.user['טלפון_לקוח'];
-                 // Assuming the API endpoint fetches all data for the user
+                 const phone = this.state.user['מספר טלפון'];
                  this.state.data = await this.api('getDashboardData', { phone });
+                 
                  // If the API call fails, provide mock data
                  if (!this.state.data) {
                     this.state.data = {
@@ -329,12 +358,19 @@
                         ]
                     };
                  }
+                 this.state.data.activeContainers = this.state.data.activeContainers.map(c => {
+                    const daysOnSite = dayjs().diff(dayjs(c['תאריך הזמנה']), 'day');
+                    if (daysOnSite > 10) {
+                        c.סטטוס = 'חורג';
+                    }
+                    return c;
+                 });
             },
             
             initializeApp() {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('client-name').textContent = this.state.user['שם_לקוח'];
+                document.getElementById('client-name').textContent = this.state.user['שם לקוח'];
                 this.navigateTo('dashboard');
             },
 
@@ -345,7 +381,6 @@
                 if (document.getElementById(pageId)) {
                     document.getElementById(pageId).classList.add('active');
                 } else {
-                     // If the page doesn't exist, we'll go to dashboard
                     document.getElementById('dashboard-page').classList.add('active');
                     this.state.currentView = 'dashboard';
                 }
@@ -413,15 +448,30 @@
                     ...(this.state.data.newOrders || []),
                     ...(this.state.data.activeContainers || [])
                 ].sort((a,b) => new Date(b['created_at'] || b['תאריך הזמנה']) - new Date(a['created_at'] || a['תאריך הזמנה']));
-
-                if (allUserOrders.length === 0) {
+                
+                document.getElementById('order-search').addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const filteredOrders = allUserOrders.filter(order => {
+                        return Object.values(order).some(val => 
+                            String(val).toLowerCase().includes(searchTerm)
+                        );
+                    });
+                    this.displayOrders(filteredOrders);
+                });
+                
+                this.displayOrders(allUserOrders);
+            },
+            
+            displayOrders(orders) {
+                const ordersList = document.getElementById('orders-list');
+                 if (orders.length === 0) {
                     ordersList.innerHTML = `<p class="text-center text-gray-500">לא נמצאו הזמנות.</p>`;
                     return;
                 }
 
-                ordersList.innerHTML = allUserOrders.map(order => {
+                ordersList.innerHTML = orders.map(order => {
                     const isOverdue = order.סטטוס === 'חורג';
-                    const overdueClass = isOverdue ? 'ring-2 ring-red-500' : '';
+                    const overdueClass = isOverdue ? 'ring-2 ring-red-500 animate-pulse' : '';
                     const containerNumber = order['מספר מכולה ירדה'] || order['מספר מכולה עלתה'] || 'לא רלוונטי';
 
                     return `
@@ -466,7 +516,7 @@
                 }
                 
                 contentDiv.innerHTML = `<h2 class="text-xl font-bold mb-4">מכולות בשטח</h2>` + containers.map(container => {
-                    const overdueClass = container.סטטוס === 'חורג' ? 'ring-2 ring-red-500' : '';
+                    const overdueClass = container.סטטוס === 'חורג' ? 'ring-2 ring-red-500 animate-pulse' : '';
                     return `
                         <div class="container-card border border-gray-200 p-4 rounded-lg bg-white card-glow mb-4 ${overdueClass}">
                             <div class="flex justify-between items-start">
@@ -526,6 +576,9 @@
 
             getStep1Html() {
                 const projects = this.state.data.projects || [];
+                const activeContainers = this.state.data.activeContainers || [];
+                const hasActiveContainer = activeContainers.length > 0;
+                
                 return `
                     <h2 class="text-lg font-bold mb-4">שלב 1: בחירת פרויקט וסוג פעולה</h2>
                     <div class="space-y-4">
@@ -566,6 +619,17 @@
                         document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('border-green-500', 'bg-green-50'));
                         btn.classList.add('border-green-500', 'bg-green-50');
                         this.state.newOrder.actionType = btn.dataset.action;
+                        
+                        if (btn.dataset.action === 'הצבה' && this.state.data.activeContainers.length > 0) {
+                             Swal.fire({
+                                title: 'יש לך מכולה פתוחה',
+                                text: 'האם תרצה לבצע החלפה או פינוי במקום הזמנה חדשה?',
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'המשך עם הצבה',
+                                cancelButtonText: 'ביטול'
+                             });
+                        }
                     });
                 });
                 document.getElementById('next-step-btn').addEventListener('click', () => {
@@ -644,7 +708,8 @@
                      submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i> שולח...`;
                      
                      const orderPayload = {
-                        phone: this.state.user['טלפון_לקוח'],
+                        clientName: this.state.user['שם לקוח'],
+                        phone: this.state.user['מספר טלפון'],
                         project: this.state.newOrder.project.name,
                         address: this.state.newOrder.project.address,
                         actionType: this.state.newOrder.actionType,
