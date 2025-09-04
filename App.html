@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת VIP ח. סבן</title>
+    <title>מערכת VIP ח. סבן - שדרוג</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
@@ -12,819 +12,554 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --primary-color: #1F9D55; /* A vibrant green */
-            --secondary-color: #37B372;
-            --text-color: #212529;
-            --background-color: #f0f4f8;
-            --card-bg: #ffffff;
-            --logo-color: #004d40;
+            --primary-color: #1F9D55;
+            --secondary-color: #f7fafc;
         }
-        body { font-family: 'Rubik', sans-serif; background-color: var(--background-color); color: var(--text-color); }
-        .app-shell {
-            border: 10px solid #1a1a1a;
-            border-radius: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 15px rgba(0,0,0,0.5);
-            overflow: hidden;
+
+        body {
+            font-family: 'Rubik', sans-serif;
+            background-color: var(--secondary-color);
+            direction: rtl;
         }
-        .page { display: none; }
-        .page.active { display: block; }
-        .card-glow:hover { box-shadow: 0 0 20px rgba(0, 123, 255, 0.2); transform: scale(1.02); transition: all 0.3s ease; }
-        
-        /* Samsung-style status bar */
-        .status-bar {
-            background: linear-gradient(to right, #ffffff, #f0f4f8);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-bottom-left-radius: 1rem;
-            border-bottom-right-radius: 1rem;
+
+        .view {
+            display: none;
         }
-        .blinking-dot {
-            animation: blink 1.5s infinite;
+
+        .active-view {
+            display: block;
         }
-        @keyframes blink {
-            50% { opacity: 0; }
+
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
         }
         
-        /* Login screen avatar animation */
-        .avatar-frame {
-            border-radius: 50%;
-            border: 4px solid var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(31, 157, 85, 0.5), 0 0 0 8px rgba(31, 157, 85, 0.3);
-            transition: all 0.3s ease-in-out;
-            animation: pulse-border 2s infinite;
+        .card:hover {
+             transform: translateY(-5px);
         }
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(31, 157, 85, 0.5); }
-            50% { box-shadow: 0 0 0 12px rgba(31, 157, 85, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(31, 157, 85, 0); }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            transition: background-color 0.3s ease-in-out;
         }
-        
-        /* Main page buttons layout */
-        .main-buttons-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-gap: 1rem;
-            align-items: center;
-            position: relative;
-            margin-top: 1rem;
+
+        .btn-primary:hover {
+            background-color: #1c8c4a;
         }
-        .new-order-btn-wrapper {
-            grid-column: 1 / 3;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
+
+        .input {
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            transition: border-color 0.3s;
         }
-        .main-btn {
-            background-color: var(--card-bg);
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s;
-            position: relative;
-            z-index: 5;
-        }
-        .main-btn:hover {
+
+        .input:focus {
+            outline: none;
             border-color: var(--primary-color);
-            transform: translateY(-5px);
-        }
-        .main-btn .icon-bg {
-             background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-             -webkit-background-clip: text;
-             -webkit-text-fill-color: transparent;
-             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
         }
 
-        /* Chat-like typing effect */
-        .typing-effect::after {
-            content: '...';
-            display: inline-block;
-            animation: typing-dots 1s infinite;
-        }
-        @keyframes typing-dots {
-            0% { content: ''; }
-            33% { content: '.'; }
-            66% { content: '..'; }
-            100% { content: '...'; }
+        .nav-item {
+            position: relative;
+            cursor: pointer;
+            transition: color 0.3s ease-in-out;
         }
 
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        .nav-item.active {
+            color: var(--primary-color);
         }
-        .neumorphism-btn {
-            background: #f0f4f8;
-            border-radius: 12px;
-            box-shadow: 6px 6px 12px #d5d9e0, -6px -6px 12px #ffffff;
-            transition: all 0.2s ease-in-out;
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 1.5px;
         }
-        .neumorphism-btn:hover {
-            box-shadow: 3px 3px 6px #d5d9e0, -3px -3px 6px #ffffff;
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        .neumorphism-btn:active {
-            box-shadow: inset 3px 3px 6px #d5d9e0, inset -3px -3px 6px #ffffff;
-        }
-        .overdue-alert {
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
-            border-color: #ef4444 !important;
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
         }
     </style>
 </head>
-<body class="flex justify-center items-center h-screen bg-gray-200">
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4 md:p-8">
 
-    <div class="app-shell max-w-md w-full h-full md:h-[95vh] md:max-h-[800px] flex flex-col">
-        <!-- Login Screen -->
-        <div id="login-screen" class="flex flex-col items-center justify-center h-full p-8 bg-slate-100">
-            <div class="w-full text-center">
-                <div class="mb-8">
-                    <img id="client-avatar" src="https://img.icons8.com/plasticine/100/000000/user-male-circle.png" alt="Client Avatar" class="avatar-frame w-24 h-24 mx-auto mb-4 object-cover">
-                    <h1 class="text-3xl font-extrabold text-gray-800 mb-2">מערכת VIP</h1>
-                    <p class="text-gray-500 font-bold text-lg">ח. סבן - חומרי בניין</p>
+        <!-- Login View -->
+        <div id="login-view" class="view active-view flex items-center justify-center min-h-screen">
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md fade-in">
+                <div class="flex flex-col items-center">
+                    <img src="https://img.icons8.com/?size=100&id=20750&format=png&color=000000" alt="Logo" class="w-24 h-24 mb-4">
+                    <h1 class="text-3xl font-bold mb-6 text-gray-800">התחברות</h1>
                 </div>
-                <div class="relative mb-4"><input id="phone" type="tel" class="w-full p-3 border-2 rounded-lg text-center transition focus:border-green-400" placeholder="מספר טלפון"></div>
-                <div class="relative mb-6"><input id="password" type="password" class="w-full p-3 border-2 rounded-lg text-center transition focus:border-green-400" placeholder="סיסמה"></div>
-                <button id="login-btn" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold shadow-lg hover:bg-green-700 transform transition">כניסה למערכת</button>
+                <div class="space-y-4">
+                    <input id="phone-input" type="text" placeholder="מספר טלפון" class="w-full input text-right" dir="ltr">
+                    <input id="password-input" type="password" placeholder="סיסמה" class="w-full input text-right" dir="ltr">
+                    <button id="login-btn" class="w-full btn-primary font-semibold">
+                        התחבר
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Main App (hidden initially) -->
-        <main id="main-app" class="hidden flex-grow flex flex-col bg-gray-50">
-           <header class="p-4 bg-white border-b flex justify-between items-center sticky top-0 z-10 status-bar">
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-green-500 rounded-full blinking-dot"></div>
-                    <span class="text-sm font-semibold">מחובר</span>
+        <!-- Main App View -->
+        <div id="main-view" class="view hidden">
+            <!-- Header -->
+            <header class="card p-4 flex items-center justify-between mb-6 sticky top-0 z-10 fade-in">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <img id="avatar-img" src="" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-300">
+                    <h2 id="welcome-message" class="text-lg font-semibold text-gray-800"></h2>
                 </div>
-                <div class="flex items-center gap-2 relative">
-                    <span class="text-sm font-semibold">אונליין</span>
-                    <div class="w-3 h-3 bg-green-500 rounded-full blinking-dot"></div>
-                    <img id="orders-dept-avatar" src="https://img.icons8.com/color/48/000000/truck--v1.png" alt="Orders Department" class="w-8 h-8 rounded-full cursor-pointer ml-2">
-                    <div id="dept-dropdown" class="hidden absolute top-full left-0 w-48 bg-white border rounded-lg shadow-xl mt-2 overflow-hidden z-20">
-                        <a href="#" id="call-dept-btn" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fas fa-phone-alt ml-3 text-primary"></i>התקשר למחלקת הזמנות</a>
-                        <a href="#" id="send-order-btn-dropdown" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fas fa-plus-circle ml-3 text-blue-500"></i>שלח הזמנה חדשה</a>
-                        <a href="#" id="send-question-btn-dropdown" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fas fa-question-circle ml-3 text-yellow-500"></i>שלח שאלה</a>
-                    </div>
-                </div>
+                <nav class="flex items-center space-x-6 space-x-reverse text-gray-600 font-medium">
+                    <span id="nav-dashboard" class="nav-item active" data-view="dashboard">לוח מחוונים</span>
+                    <span id="nav-new-order" class="nav-item" data-view="new-order">הזמנה חדשה</span>
+                    <span id="nav-chat" class="nav-item" data-view="chat">צ'אט</span>
+                    <span id="nav-logout" class="nav-item text-red-500 hover:text-red-600">התנתק</span>
+                </nav>
             </header>
-            
-            <div id="content" class="flex-grow p-4 overflow-y-auto">
-                <div id="dashboard-page" class="page active">
-                    <div class="p-4 rounded-lg bg-gray-100 mb-6 glass-effect">
-                        <h1 id="client-greeting" class="text-2xl font-bold text-primary mb-2">ברוכים הבאים, <span id="client-name"></span></h1>
-                        <p id="live-clock" class="text-sm text-gray-500"></p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-white p-4 rounded-lg shadow-md card-glow flex items-center gap-4 glass-effect">
-                            <div class="bg-blue-100 text-blue-600 rounded-full h-12 w-12 flex items-center justify-center"><i class="fa-solid fa-truck-ramp-box text-2xl"></i></div>
-                            <div>
-                                <p class="text-gray-500 text-sm">מכולות פעילות</p>
-                                <p id="kpi-active" class="text-2xl font-extrabold text-gray-800">0</p>
-                            </div>
-                        </div>
-                        <div class="bg-white p-4 rounded-lg shadow-md card-glow flex items-center gap-4 glass-effect">
-                            <div class="bg-yellow-100 text-yellow-600 rounded-full h-12 w-12 flex items-center justify-center"><i class="fa-solid fa-hourglass-half text-2xl"></i></div>
-                            <div>
-                                <p class="text-gray-500 text-sm">הזמנות לביצוע</p>
-                                <p id="kpi-pending" class="text-2xl font-extrabold text-gray-800">0</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-md mt-6 glass-effect">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">הזמנות אחרונות</h2>
-                        <div id="recent-orders-list"></div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                        <div class="p-4 rounded-lg bg-white glass-effect">
-                            <h3 class="text-md font-bold mb-2">הזמנות לפי סוג</h3>
-                            <canvas id="order-type-chart"></canvas>
-                        </div>
-                        <div class="p-4 rounded-lg bg-white glass-effect">
-                            <h3 class="text-md font-bold mb-2">סטטוס הזמנות</h3>
-                            <canvas id="order-status-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
 
-                <div id="orders-page" class="page">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">היסטוריית הזמנות</h2>
-                    <div class="mb-4">
-                        <input type="text" id="order-search" placeholder="חפש לפי פרויקט, תעודה, סטטוס..." class="w-full p-2 border rounded-lg neumorphism-btn">
-                    </div>
-                    <div id="orders-list" class="space-y-4"></div>
-                </div>
-
-                <div id="projects-page" class="page">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">הפרויקטים שלי</h2>
-                    <div id="projects-list" class="space-y-4"></div>
-                </div>
-                
-                <div id="new-order-page" class="page">
-                     <div id="new-order-form" class="bg-white p-4 rounded-lg shadow-md glass-effect">
-                         <div class="flex justify-between items-center mb-6">
-                            <div class="step-icon-container flex-1 relative flex justify-between items-center">
-                                <div class="w-full absolute border-b-2 border-dashed border-gray-300 top-1/2 -translate-y-1/2"></div>
-                                <div id="step-icon-1" class="step-icon z-10">1</div>
-                                <div id="step-icon-2" class="step-icon z-10">2</div>
-                                <div id="step-icon-3" class="step-icon z-10">3</div>
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active-view fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Projects Card -->
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">הפרויקטים שלי</h3>
+                        <div id="projects-list" class="space-y-4">
+                            <!-- Projects will be dynamically inserted here -->
+                            <div class="animate-pulse">
+                                <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-full"></div>
                             </div>
-                         </div>
-                         <div id="form-content"></div>
-                     </div>
+                        </div>
+                    </div>
+                    <!-- New Orders Card -->
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">הזמנות פתוחות</h3>
+                        <div id="new-orders-list" class="space-y-4">
+                            <!-- Orders will be dynamically inserted here -->
+                            <div class="animate-pulse">
+                                <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Active Containers Card -->
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">מכולות פעילות</h3>
+                        <div id="active-containers-list" class="space-y-4">
+                            <!-- Containers will be dynamically inserted here -->
+                            <div class="animate-pulse">
+                                <div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <nav class="grid grid-cols-5 p-2 bg-white border-t shadow-inner mt-auto relative">
-                <button data-screen="dashboard" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-chart-line text-xl"></i><span class="text-xs mt-1">לוח בקרה</span></button>
-                <button data-screen="containers" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-dumpster text-xl"></i><span class="text-xs mt-1">מכולות</span></button>
-                <div class="col-span-1 flex justify-center items-center">
-                    <button id="new-order-btn" class="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg transform hover:scale-110 transition -mt-8"><i class="fas fa-plus"></i></button>
+            <!-- New Order View -->
+            <div id="new-order-view" class="view hidden fade-in">
+                <div class="card p-6 w-full max-w-4xl mx-auto">
+                    <h3 class="text-xl font-bold mb-6 text-gray-800">הזמנה חדשה</h3>
+                    <form id="new-order-form" class="space-y-6">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">בחר סוג הזמנה</label>
+                            <div class="flex space-x-4 space-x-reverse">
+                                <button type="button" id="type-materials" class="p-3 bg-gray-200 rounded-lg flex-1 font-semibold hover:bg-gray-300 transition-colors">
+                                    <i class="fa-solid fa-hard-hat ml-2"></i>חומרי בניין
+                                </button>
+                                <button type="button" id="type-container" class="p-3 bg-gray-200 rounded-lg flex-1 font-semibold hover:bg-gray-300 transition-colors">
+                                    <i class="fa-solid fa-dumpster ml-2"></i>מכולה
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Common Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="order-project" class="block text-gray-700 font-medium mb-2">פרויקט</label>
+                                <select id="order-project" class="w-full input">
+                                    <option value="">בחר פרויקט</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="order-notes" class="block text-gray-700 font-medium mb-2">הערות</label>
+                                <textarea id="order-notes" class="w-full input" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Materials-specific fields -->
+                        <div id="materials-fields" class="hidden">
+                            <h4 class="text-lg font-bold my-4">בחירת חומרים</h4>
+                            <div id="materials-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <!-- Materials will be dynamically inserted here -->
+                            </div>
+                            <div id="selected-materials" class="mt-4 p-4 card">
+                                <h5 class="font-bold">פריטים שנבחרו:</h5>
+                                <ul id="selected-materials-list" class="space-y-2 mt-2"></ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Container-specific fields -->
+                        <div id="container-fields" class="hidden">
+                            <h4 class="text-lg font-bold my-4">בחירת מכולה</h4>
+                            <div>
+                                <label for="container-action" class="block text-gray-700 font-medium mb-2">סוג פעולה</label>
+                                <select id="container-action" class="w-full input">
+                                    <option value="">בחר פעולה</option>
+                                    <option value="הורדה">הורדה</option>
+                                    <option value="החלפה">החלפה</option>
+                                    <option value="העלאה">העלאה</option>
+                                </select>
+                            </div>
+                            <div id="container-number-field" class="hidden mt-4">
+                                <label for="container-number" class="block text-gray-700 font-medium mb-2">מספר מכולה (להחלפה/העלאה)</label>
+                                <input type="text" id="container-number" class="w-full input" placeholder="מספר מכולה">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submit-order-btn" class="w-full btn-primary font-semibold mt-6">
+                            שלח הזמנה
+                        </button>
+                    </form>
                 </div>
-                <button data-screen="materials" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-hard-hat text-xl"></i><span class="text-xs mt-1">חומרים</span></button>
-                <button data-screen="orders" class="nav-btn text-gray-500 flex flex-col items-center p-2"><i class="fa-solid fa-clipboard-list text-xl"></i><span class="text-xs mt-1">הזמנות</span></button>
-            </nav>
-        </main>
-        
-        <div id="modals-container"></div>
+            </div>
+
+            <!-- Chat View -->
+            <div id="chat-view" class="view hidden fade-in">
+                <div class="card p-6 w-full max-w-lg mx-auto flex flex-col h-[70vh]">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">צ'אט</h3>
+                    <div id="chat-messages" class="flex-1 overflow-y-auto space-y-4 p-4 border rounded-lg bg-gray-50 mb-4">
+                        <!-- Chat messages will be dynamically inserted here -->
+                        <div class="text-center text-gray-500">
+                             טוען הודעות...
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <input type="text" id="chat-input" placeholder="כתוב הודעה..." class="flex-1 input">
+                        <button id="send-chat-btn" class="ml-2 btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
-        const SPREADSHEET_ID = '1o5A2cNJSoAOVCymFDhPW---10EgH9zu5iyBE5fIt8Jw';
-        const API_URL = `https://script.google.com/macros/s/AKfycbwQlLobKoz9Y2FjievsnRXFjoDzPbgBt_dCbJAqexwToThMvsebsKY18SQHBpHE7bh7/exec`;
+        // Updated API URL for the new backend script
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwQlLobKoz9Y2FjievsnRXFjoDzPbgBt_dCbJAqexwToThMvsebsKY18SQHBpHE7bh7/exec';
+
+        // The API function now handles GET and POST requests more robustly
+        async function callApi(action, params = {}) {
+            const url = new URL(API_URL);
+            url.searchParams.append('action', action);
+            for (const key in params) {
+                if (params.hasOwnProperty(key)) {
+                    url.searchParams.append(key, params[key]);
+                }
+            }
+            try {
+                const response = await fetch(url.toString(), {
+                    method: 'POST', // Use POST for all requests
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    return data.data;
+                } else {
+                    Swal.fire('שגיאה!', data.data, 'error');
+                    return null;
+                }
+            } catch (error) {
+                Swal.fire('שגיאת תקשורת!', `אירעה שגיאה: ${error.message}`, 'error');
+                return null;
+            }
+        }
 
         const App = {
             state: {
                 user: null,
-                currentView: 'dashboard',
-                data: null,
-                newOrder: { type: null, step: 1, project: null, items: [] },
-                
-                mockData: {
-                    projects: [
-                        { projectName: 'פרויקט אלנבי', projectAddress: 'ויצמן 4, רעננה' },
-                        { projectName: 'פרויקט הסתדרות', projectAddress: 'הסתדרות 29, רעננה' },
-                    ],
-                    products: [
-                        { sku: 'CNT-8', productName: 'מכולה 8 קוב', description: 'מכולת פסולת בניין בנפח 8 קוב', imageUrl: 'https://i.ibb.co/6P0xWpQ/container-8.jpg' },
-                        { sku: 'CNT-12', productName: 'מכולה 12 קוב', description: 'מכולה לפינוי פסולת בניין גדולה', imageUrl: 'https://i.ibb.co/5cQv1F3/container-12.jpg' },
-                        { sku: 'MLT-25', productName: 'מלט 25 ק"ג', description: 'מלט פורטלנד איכותי לעבודות בניה', imageUrl: 'https://i.ibb.co/mHq33kS/cement.png' },
-                        { sku: 'KR-50', productName: 'גליל קרטון 50 מטר', description: 'קרטון גלי איכותי להגנה על ריצוף', imageUrl: 'https://i.ibb.co/m8gL2x2/cardboard.png' },
-                    ]
+                projects: [],
+                materials: [],
+                dashboardData: null,
+                newOrder: {
+                    type: null,
+                    project: null,
+                    notes: '',
+                    items: [],
+                    actionType: null,
+                    containerNumber: null
                 }
             },
-
+            views: {},
             init() {
-                dayjs.locale('he');
-                this.attachEventListeners();
-                this.updateClock();
-                setInterval(() => this.updateClock(), 1000);
+                this.views = {
+                    login: document.getElementById('login-view'),
+                    main: document.getElementById('main-view'),
+                    dashboard: document.getElementById('dashboard-view'),
+                    newOrder: document.getElementById('new-order-view'),
+                    chat: document.getElementById('chat-view'),
+                };
+                this.bindEvents();
             },
-
-            async api(action, params = {}) {
-                const url = new URL(API_URL);
-                url.searchParams.append('action', action);
-                for (const key in params) {
-                    if (Array.isArray(params[key])) {
-                        url.searchParams.append(key, JSON.stringify(params[key]));
-                    } else {
-                        url.searchParams.append(key, params[key]);
-                    }
-                }
-                
-                console.log(`[API Call] Action: ${action}, Params:`, params);
-
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    
-                    if (!data.success) {
-                        throw new Error(data.message || 'An unknown API error occurred.');
-                    }
-                    console.log(`[API Response] Action: ${action}, Data:`, data.data);
-                    return data.data;
-                } catch (error) {
-                    console.error(`[API Error] Action: ${action}, Error:`, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'שגיאה',
-                        text: `אירעה שגיאה בפניה לשרת: ${error.message}. בדוק בקונסול לפרטים נוספים.`,
-                        confirmButtonText: 'אישור'
-                    });
-                    throw error;
+            navigateTo(viewName) {
+                Object.values(this.views).forEach(view => view.classList.remove('active-view'));
+                if (viewName === 'main') {
+                    this.views.main.classList.add('active-view');
+                    document.getElementById('nav-dashboard').classList.add('active');
+                } else if (this.views[viewName]) {
+                    this.views.main.classList.add('active-view');
+                    this.views[viewName].classList.add('active-view');
+                    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                    document.getElementById(`nav-${viewName}`).classList.add('active');
+                } else if (viewName === 'login') {
+                    this.views.login.classList.add('active-view');
                 }
             },
-
-            attachEventListeners() {
-                document.getElementById('login-btn').addEventListener('click', () => this.handleLogin());
-                document.getElementById('new-order-btn').addEventListener('click', () => this.navigateTo('new-order'));
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.addEventListener('click', () => this.navigateTo(btn.dataset.screen));
-                });
-                document.getElementById('orders-dept-avatar').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    document.getElementById('dept-dropdown').classList.toggle('hidden');
-                });
-                document.getElementById('call-dept-btn').addEventListener('click', () => {
-                    window.location.href = 'tel:097602010';
-                });
-                document.getElementById('send-order-btn-dropdown').addEventListener('click', () => this.navigateTo('new-order'));
-                document.getElementById('send-question-btn-dropdown').addEventListener('click', () => Swal.fire('פונקציה בפיתוח', 'ניתן ליצור קשר בוואטסאפ או בטלפון.', 'info'));
-            },
-
-            async handleLogin() {
-                const phone = document.getElementById('phone').value.trim();
-                const password = document.getElementById('password').value.trim();
-                const loginBtn = document.getElementById('login-btn');
-                
-                console.log(`[Login Attempt] Phone: ${phone}, Password: ${password}`);
-
-                if (!phone || password !== 'סבן') {
-                    console.error('[Login Error] Invalid credentials.');
-                    return Swal.fire({ icon: 'error', title: 'שגיאה', text: 'מספר טלפון או סיסמה שגויים.' });
-                }
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i> מתחבר...`;
-                
-                try {
-                    const user = await this.api('auth', { phone, password });
-                    if (user) {
-                        this.state.user = user;
-                        document.getElementById('client-avatar').src = this.state.user.avatar_url;
-                        await this.fetchInitialData();
-                        this.initializeApp();
-                    } else {
-                        console.error('[Login Error] User data not returned from API.');
-                        throw new Error('User data not returned');
-                    }
-                } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'שגיאה', text: `ההתחברות נכשלה. נסה שוב.`, confirmButtonText: 'אישור' });
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = `כניסה למערכת`;
-                }
-            },
-
-            async fetchInitialData() {
-                console.log('[Fetching Initial Data]');
-                 const phone = this.state.user['מספר טלפון'];
-                 this.state.data = await this.api('getDashboardData', { phone });
-                 
-                 if (!this.state.data) {
-                    console.warn('[Mock Data Enabled] API call failed, using mock data.');
-                    this.state.data = {
-                        projects: this.state.mockData.projects,
-                        newOrders: [
-                           { 'תעודה': '6713578', 'פרויקט': 'שמעון הראל', 'כתובת': 'אלמוג 12, ארסוף', 'סוג פעולה': 'הורדה', 'סטטוס': 'סגור', 'created_at': '2025-07-24' },
-                           { 'תעודה': '6714030', 'פרויקט': 'מודי יבוא', 'כתובת': 'לחי 31, בני ברק', 'סוג פעולה': 'החלפה', 'סטטוס': 'פתוח', 'created_at': '2025-08-01' },
-                        ],
-                        activeContainers: [
-                           { 'תעודה': '6713475', 'פרויקט': 'גום טכניקה', 'כתובת': 'קיבוץ יקום', 'סוג פעולה': 'החלפה', 'סטטוס': 'פתוח', 'ימים שעברו': 25, 'מספר מכולה ירדה': 210, 'מספר מכולה עלתה': 5, 'תאריך הזמנה': '2025-08-08T00:00:00.000Z' },
-                           { 'תעודה': '6714067', 'פרויקט': 'אילן בוקטוס', 'כתובת': 'רחוב ראשי', 'סוג פעולה': 'העלאה', 'סטטוס': 'חורג', 'ימים שעברו': 12, 'מספר מכולה ירדה': 6, 'מספר מכולה עלתה': 6, 'תאריך הזמנה': '2025-08-15T00:00:00.000Z' }
-                        ]
-                    };
-                 }
-                 this.state.data.activeContainers = this.state.data.activeContainers.map(c => {
-                    const daysOnSite = dayjs().diff(dayjs(c['תאריך הזמנה']), 'day');
-                    if (daysOnSite > 10) {
-                        c.סטטוס = 'חורג';
-                    }
-                    return c;
-                 });
-            },
-            
-            initializeApp() {
-                console.log('[App Initialized]');
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('client-name').textContent = this.state.user['שם לקוח'];
-                this.navigateTo('dashboard');
-            },
-
-            navigateTo(view) {
-                console.log(`[Navigation] Navigating to: ${view}`);
-                this.state.currentView = view;
-                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-                const pageId = `${view}-page`;
-                if (document.getElementById(pageId)) {
-                    document.getElementById(pageId).classList.add('active');
-                } else {
-                    document.getElementById('dashboard-page').classList.add('active');
-                    this.state.currentView = 'dashboard';
-                }
-                this.renderContent();
-            },
-
-            renderContent() {
-                console.log(`[Rendering] Rendering content for view: ${this.state.currentView}`);
-                if (this.state.currentView === 'dashboard') {
-                    this.renderDashboard();
-                } else if (this.state.currentView === 'orders') {
-                    this.renderOrders();
-                } else if (this.state.currentView === 'projects') {
-                     this.renderProjects();
-                } else if (this.state.currentView === 'new-order') {
-                     this.renderNewOrderForm();
-                } else if (this.state.currentView === 'containers') {
-                     this.renderContainers();
-                } else if (this.state.currentView === 'materials') {
-                     this.renderMaterials();
-                }
-            },
-            
-            updateClock() {
-                document.getElementById('live-clock').textContent = dayjs().format('DD/MM/YYYY HH:mm:ss');
-            },
-
-            getStatusBadge(status) {
-                let colorClasses = 'bg-gray-100 text-gray-800';
-                if (status === 'פתוח' || status === 'בטיפול') colorClasses = 'bg-blue-100 text-blue-800';
-                if (status === 'חורג') colorClasses = 'bg-red-100 text-red-800 animate-pulse';
-                if (status === 'בוצע' || status === 'סגור') colorClasses = 'bg-green-100 text-green-800';
-                return `<span class="text-sm font-semibold px-3 py-1 rounded-full ${colorClasses}">${status}</span>`;
-            },
-            
-            renderDashboard() {
-                 const { newOrders, activeContainers } = this.state.data;
-                 const activeCount = (activeContainers || []).length;
-                 const pendingCount = (newOrders || []).length;
-                 
-                 document.getElementById('kpi-active').textContent = activeCount;
-                 document.getElementById('kpi-pending').textContent = pendingCount;
-                 
-                 const recentOrdersList = document.getElementById('recent-orders-list');
-                 const allOrders = [...(newOrders || []), ...(activeContainers || [])].sort((a,b) => new Date(b['created_at'] || b['תאריך הזמנה']) - new Date(a['created_at'] || a['תאריך הזמנה'])).slice(0, 5);
-                 
-                 if (allOrders.length === 0) {
-                     recentOrdersList.innerHTML = `<p class="text-center text-gray-500">אין הזמנות אחרונות להצגה.</p>`;
-                     return;
-                 }
-                 
-                 recentOrdersList.innerHTML = allOrders.map(order => `
-                    <div class="flex justify-between items-center p-3 rounded-lg bg-gray-50">
-                        <div>
-                            <p class="font-semibold">${order['פרויקט'] || 'פרויקט לא ידוע'}</p>
-                            <p class="text-sm text-gray-500">מס' הזמנה: ${order.תעודה || 'לא ידוע'}</p>
-                        </div>
-                        ${this.getStatusBadge(order.סטטוס)}
-                    </div>
-                 `).join('');
-
-                 this.renderCharts();
-            },
-
-            renderCharts() {
-                const orderTypes = (this.state.data.newOrders || []).map(o => o['סוג פעולה']);
-                const typeCounts = orderTypes.reduce((acc, type) => {
-                    acc[type] = (acc[type] || 0) + 1;
-                    return acc;
-                }, {});
-                
-                const typeChartCtx = document.getElementById('order-type-chart').getContext('2d');
-                new Chart(typeChartCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(typeCounts),
-                        datasets: [{
-                            data: Object.values(typeCounts),
-                            backgroundColor: ['#1F9D55', '#37B372', '#212529'],
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    font: { family: 'Rubik' }
-                                }
-                            }
-                        }
-                    }
-                });
-
-                const orderStatuses = [...(this.state.data.newOrders || []), ...(this.state.data.activeContainers || [])].map(o => o.סטטוס);
-                const statusCounts = orderStatuses.reduce((acc, status) => {
-                    acc[status] = (acc[status] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const statusChartCtx = document.getElementById('order-status-chart').getContext('2d');
-                new Chart(statusChartCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(statusCounts),
-                        datasets: [{
-                            data: Object.values(statusCounts),
-                            backgroundColor: ['#1F9D55', '#E5A500', '#EF4444', '#6B7280'],
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    font: { family: 'Rubik' }
-                                }
-                            }
-                        }
-                    }
-                });
-            },
-
-            renderOrders() {
-                const ordersList = document.getElementById('orders-list');
-                const allUserOrders = [
-                    ...(this.state.data.newOrders || []),
-                    ...(this.state.data.activeContainers || [])
-                ].sort((a,b) => new Date(b['created_at'] || b['תאריך הזמנה']) - new Date(a['created_at'] || a['תאריך הזמנה']));
-                
-                document.getElementById('order-search').addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    const filteredOrders = allUserOrders.filter(order => {
-                        return Object.values(order).some(val => 
-                            String(val).toLowerCase().includes(searchTerm)
-                        );
-                    });
-                    this.displayOrders(filteredOrders);
-                });
-                
-                this.displayOrders(allUserOrders);
-            },
-            
-            displayOrders(orders) {
-                const ordersList = document.getElementById('orders-list');
-                 if (orders.length === 0) {
-                    ordersList.innerHTML = `<p class="text-center text-gray-500">לא נמצאו הזמנות.</p>`;
-                    return;
-                }
-
-                ordersList.innerHTML = orders.map(order => {
-                    const isOverdue = order.סטטוס === 'חורג';
-                    const overdueClass = isOverdue ? 'ring-2 ring-red-500 animate-pulse' : '';
-                    const containerNumber = order['מספר מכולה ירדה'] || order['מספר מכולה עלתה'] || 'לא רלוונטי';
-
-                    return `
-                    <div class="order-card border border-gray-200 p-4 rounded-lg bg-white card-glow ${overdueClass}">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                            <div>
-                                <h4 class="font-bold text-lg text-gray-800">${order.פרויקט || 'פרויקט לא ידוע'}</h4>
-                                <p class="text-sm text-gray-500">מס' הזמנה: ${order.תעודה || 'לא ידוע'}</p>
-                            </div>
-                            ${this.getStatusBadge(order.סטטוס)}
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                             <p class="text-sm"><strong class="font-medium">מספר מכולה:</strong> ${containerNumber}</p>
-                             <p class="text-sm"><strong class="font-medium">סוג פעולה:</strong> ${order['סוג פעולה'] || 'לא רלוונטי'}</p>
-                             <p class="text-sm"><strong class="font-medium">כתובת:</strong> ${order.כתובת || 'לא רלוונטי'}</p>
-                        </div>
-                        <div class="flex justify-end mt-4">
-                            <button class="bg-gray-200 text-gray-700 py-1 px-3 rounded-lg hover:bg-gray-300 transition">שכפול הזמנה</button>
-                        </div>
-                    </div>
-                `}).join('');
-            },
-
-            renderProjects() {
-                const projectsList = document.getElementById('projects-list');
-                const projects = this.state.data.projects || [];
-                if (projects.length === 0) {
-                    projectsList.innerHTML = `<p class="text-center text-gray-500">לא נמצאו פרויקטים.</p>`;
-                    return;
-                }
-                projectsList.innerHTML = projects.map(p => `
-                    <div class="project-card border border-gray-200 p-4 rounded-lg bg-white card-glow">
-                        <h4 class="font-bold text-lg text-gray-800">${p.projectName}</h4>
-                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt ml-2"></i>${p.projectAddress}</p>
-                    </div>
-                `).join('');
-            },
-            
-            renderContainers() {
-                const contentDiv = document.getElementById('content');
-                const containers = this.state.data.activeContainers || [];
-                 if (containers.length === 0) {
-                    contentDiv.innerHTML = `<p class="text-center text-gray-500 mt-8">אין מכולות פעילות בשטח.</p>`;
-                    return;
-                }
-                
-                contentDiv.innerHTML = `<h2 class="text-xl font-bold mb-4">מכולות בשטח</h2>` + containers.map(container => {
-                    const overdueClass = container.סטטוס === 'חורג' ? 'ring-2 ring-red-500 animate-pulse' : '';
-                    return `
-                        <div class="container-card border border-gray-200 p-4 rounded-lg bg-white card-glow mb-4 ${overdueClass}">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h4 class="font-bold text-lg text-gray-800">מכולה #${container['מספר מכולה ירדה'] || container['מספר מכולה עלתה'] || 'N/A'}</h4>
-                                    <p class="text-sm text-gray-500">${container.פרויקט || 'פרויקט לא ידוע'}</p>
-                                </div>
-                                ${this.getStatusBadge(container.סטטוס)}
-                            </div>
-                            <div class="mt-4 pt-4 border-t border-gray-100">
-                                <p class="text-sm"><strong class="font-medium">כתובת:</strong> ${container.כתובת || 'לא ידוע'}</p>
-                                <p class="text-sm"><strong class="font-medium">ימים בשטח:</strong> ${container['ימים שעברו'] || 0}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            },
-            
-            renderMaterials() {
-                 const contentDiv = document.getElementById('content');
-                 const products = this.state.mockData.products.filter(p => !p.productName.includes('מכולה'));
-                 if (products.length === 0) {
-                    contentDiv.innerHTML = `<p class="text-center text-gray-500 mt-8">אין חומרי בניין זמינים.</p>`;
-                    return;
-                }
-                contentDiv.innerHTML = `<h2 class="text-xl font-bold mb-4">קטלוג חומרי בניין</h2>` + `
-                    <div id="materials-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        ${products.map(p => `
-                            <div class="product-card border rounded-lg p-4 flex flex-col items-center text-center card-glow">
-                                <img src="${p.imageUrl}" alt="${p.productName}" class="h-24 w-24 object-contain mb-2 rounded-lg border">
-                                <p class="font-semibold">${p.productName}</p>
-                                <p class="text-xs text-gray-500 flex-grow mb-2">${p.description}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            },
-
-            renderNewOrderForm() {
-                const formContent = document.getElementById('form-content');
-                const stepIcons = document.querySelectorAll('.step-icon');
-                stepIcons.forEach((icon, index) => {
-                    icon.classList.toggle('active', index + 1 <= this.state.newOrder.step);
-                });
-
-                if (this.state.newOrder.step === 1) {
-                    formContent.innerHTML = this.getStep1Html();
-                    this.attachStep1Events();
-                } else if (this.state.newOrder.step === 2) {
-                    formContent.innerHTML = this.getStep2Html();
-                    this.attachStep2Events();
-                } else if (this.state.newOrder.step === 3) {
-                    formContent.innerHTML = this.getStep3Html();
-                    this.attachStep3Events();
-                }
-            },
-
-            getStep1Html() {
-                const projects = this.state.data.projects || [];
-                const activeContainers = this.state.data.activeContainers || [];
-                const hasActiveContainer = activeContainers.length > 0;
-                
-                return `
-                    <h2 class="text-lg font-bold mb-4">שלב 1: בחירת פרויקט וסוג פעולה</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold mb-2">בחר פרויקט:</label>
-                            <div class="space-y-2">
-                                ${projects.map(p => `
-                                    <div class="project-card border rounded-lg p-3 cursor-pointer hover:bg-gray-100" data-project-name="${p.projectName}" data-project-address="${p.projectAddress}">
-                                        <p class="font-medium">${p.projectName}</p>
-                                        <p class="text-xs text-gray-500">${p.projectAddress}</p>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold mb-2">סוג פעולה:</label>
-                            <div class="flex space-x-2 space-x-reverse">
-                                <button type="button" class="action-btn flex-1 p-2 rounded-lg border-2 border-gray-300 hover:border-green-500 transition" data-action="הצבה">הצבת מכולה</button>
-                                <button type="button" class="action-btn flex-1 p-2 rounded-lg border-2 border-gray-300 hover:border-green-500 transition" data-action="החלפה">החלפת מכולה</button>
-                                <button type="button" class="action-btn flex-1 p-2 rounded-lg border-2 border-gray-300 hover:border-green-500 transition" data-action="פינוי">פינוי מכולה</button>
-                            </div>
-                        </div>
-                        <button id="next-step-btn" class="w-full bg-green-600 text-white p-3 rounded-lg mt-4">המשך</button>
-                    </div>
-                `;
-            },
-            
-            attachStep1Events() {
-                document.querySelectorAll('.project-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        document.querySelectorAll('.project-card').forEach(c => c.classList.remove('border-green-500'));
-                        card.classList.add('border-green-500');
-                        this.state.newOrder.project = { name: card.dataset.projectName, address: card.dataset.projectAddress };
-                    });
-                });
-                document.querySelectorAll('.action-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('border-green-500', 'bg-green-50'));
-                        btn.classList.add('border-green-500', 'bg-green-50');
-                        this.state.newOrder.actionType = btn.dataset.action;
-                        
-                        if (btn.dataset.action === 'הצבה' && this.state.data.activeContainers.length > 0) {
-                             Swal.fire({
-                                title: 'יש לך מכולה פתוחה',
-                                text: 'האם תרצה לבצע החלפה או פינוי במקום הזמנה חדשה?',
-                                icon: 'info',
-                                showCancelButton: true,
-                                confirmButtonText: 'המשך עם הצבה',
-                                cancelButtonText: 'ביטול'
-                             });
-                        }
-                    });
-                });
-                document.getElementById('next-step-btn').addEventListener('click', () => {
-                    if (this.state.newOrder.project && this.state.newOrder.actionType) {
-                        this.state.newOrder.step = 2;
-                        this.renderNewOrderForm();
-                    } else {
-                        Swal.fire('שגיאה', 'אנא בחר פרויקט וסוג פעולה.', 'warning');
-                    }
-                });
-            },
-            
-            getStep2Html() {
-                 return `
-                    <h2 class="text-lg font-bold mb-4">שלב 2: פרטים נוספים</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold mb-2">תאריך מועדף:</label>
-                            <input type="date" id="preferred-date" class="w-full p-3 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold mb-2">הערות:</label>
-                            <textarea id="notes" rows="3" class="w-full p-3 border rounded-lg" placeholder="הערות נוספות (אופציונלי)"></textarea>
-                        </div>
-                        <div class="flex justify-between mt-4">
-                            <button id="prev-step-btn" class="p-3 rounded-lg text-gray-500">חזור</button>
-                            <button id="next-step-btn" class="bg-green-600 text-white p-3 rounded-lg">המשך</button>
-                        </div>
-                    </div>
-                 `;
-            },
-            
-            attachStep2Events() {
-                document.getElementById('prev-step-btn').addEventListener('click', () => {
-                    this.state.newOrder.step = 1;
-                    this.renderNewOrderForm();
-                });
-                document.getElementById('next-step-btn').addEventListener('click', () => {
-                    this.state.newOrder.preferredDate = document.getElementById('preferred-date').value;
-                    this.state.newOrder.notes = document.getElementById('notes').value;
-                    if (!this.state.newOrder.preferredDate) {
-                        Swal.fire('שגיאה', 'אנא בחר תאריך מועדף.', 'warning');
+            bindEvents() {
+                // Login
+                document.getElementById('login-btn').addEventListener('click', async () => {
+                    const phone = document.getElementById('phone-input').value.trim();
+                    const password = document.getElementById('password-input').value.trim();
+                    if (!phone || !password) {
+                        Swal.fire('שגיאה!', 'יש להזין מספר טלפון וסיסמה', 'warning');
                         return;
                     }
-                    this.state.newOrder.step = 3;
-                    this.renderNewOrderForm();
+                    const result = await callApi('auth', { phone, password });
+                    if (result) {
+                        this.state.user = result;
+                        this.state.projects = result.projects;
+                        this.renderProjectsDropdown();
+                        document.getElementById('welcome-message').textContent = `שלום, ${this.state.user['שם לקוח']}!`;
+                        document.getElementById('avatar-img').src = this.state.user['avatar_url'];
+                        this.navigateTo('dashboard');
+                        this.fetchDashboardData();
+                        this.fetchMaterials();
+                    }
+                });
+
+                // Navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const view = e.target.dataset.view;
+                        if (view === 'logout') {
+                            this.state.user = null;
+                            this.navigateTo('login');
+                        } else {
+                            this.navigateTo(view);
+                            if (view === 'dashboard') {
+                                this.fetchDashboardData();
+                            } else if (view === 'chat') {
+                                this.fetchChatMessages();
+                            }
+                        }
+                    });
+                });
+
+                // New Order Type Selection
+                document.getElementById('type-materials').addEventListener('click', () => {
+                    this.state.newOrder.type = 'materials';
+                    document.getElementById('materials-fields').classList.remove('hidden');
+                    document.getElementById('container-fields').classList.add('hidden');
+                    document.getElementById('type-materials').classList.add('bg-gray-300');
+                    document.getElementById('type-container').classList.remove('bg-gray-300');
+                });
+                document.getElementById('type-container').addEventListener('click', () => {
+                    this.state.newOrder.type = 'container';
+                    document.getElementById('materials-fields').classList.add('hidden');
+                    document.getElementById('container-fields').classList.remove('hidden');
+                    document.getElementById('type-materials').classList.remove('bg-gray-300');
+                    document.getElementById('type-container').classList.add('bg-gray-300');
+                });
+
+                // Container Action Selection
+                document.getElementById('container-action').addEventListener('change', (e) => {
+                    const action = e.target.value;
+                    if (action === 'החלפה' || action === 'העלאה') {
+                        document.getElementById('container-number-field').classList.remove('hidden');
+                    } else {
+                        document.getElementById('container-number-field').classList.add('hidden');
+                    }
+                });
+
+                // Form Submission
+                document.getElementById('new-order-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById('submit-order-btn');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i> שולח...`;
+
+                    const selectedProject = document.getElementById('order-project').value;
+                    const notes = document.getElementById('order-notes').value;
+                    
+                    if (!selectedProject || !this.state.newOrder.type) {
+                        Swal.fire('שגיאה!', 'יש לבחור סוג הזמנה ופרויקט', 'warning');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `שלח הזמנה`;
+                        return;
+                    }
+                    
+                    const projectData = this.state.projects.find(p => p.projectName === selectedProject);
+                    
+                    let result;
+                    if (this.state.newOrder.type === 'materials') {
+                        const items = this.state.newOrder.items.map(item => ({
+                            name: item.name,
+                            sku: item.sku,
+                            qty: item.qty
+                        }));
+                        const payload = {
+                            clientId: this.state.user['מזהה לקוח'],
+                            clientName: this.state.user['שם לקוח'],
+                            phone: this.state.user['מספר טלפון'],
+                            projectName: projectData.projectName,
+                            projectAddress: projectData.projectAddress,
+                            notes,
+                            items: JSON.stringify(items)
+                        };
+                        result = await callApi('createOrder', payload);
+                    } else if (this.state.newOrder.type === 'container') {
+                        const actionType = document.getElementById('container-action').value;
+                        const containerNumber = document.getElementById('container-number').value;
+                        
+                        if (!actionType) {
+                            Swal.fire('שגיאה!', 'יש לבחור סוג פעולה', 'warning');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = `שלח הזמנה`;
+                            return;
+                        }
+
+                        const payload = {
+                            clientName: this.state.user['שם לקוח'],
+                            phone: this.state.user['מספר טלפון'],
+                            address: projectData.projectAddress,
+                            actionType,
+                            notes,
+                            containerNumber
+                        };
+                        result = await callApi('createContainerOrder', payload);
+                    }
+                    
+                    if (result) {
+                        Swal.fire('נשלח!', `הזמנה ${result.orderId} נוצרה בהצלחה.`, 'success');
+                        this.navigateTo('dashboard');
+                        this.fetchDashboardData();
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `שלח הזמנה`;
                 });
             },
-
-            getStep3Html() {
-                const order = this.state.newOrder;
-                return `
-                    <h2 class="text-lg font-bold mb-4">שלב 3: סיכום ההזמנה</h2>
-                    <div class="space-y-3 bg-gray-100 p-4 rounded-lg">
-                        <div class="flex justify-between"><span class="text-gray-500">פרויקט:</span><span class="font-semibold">${order.project.name}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">פעולה:</span><span class="font-semibold">${order.actionType}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">תאריך:</span><span class="font-semibold">${dayjs(order.preferredDate).format('DD/MM/YYYY')}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">הערות:</span><span class="font-semibold">${order.notes || 'אין'}</span></div>
-                    </div>
-                    <div class="flex justify-between mt-4">
-                        <button id="prev-step-btn" class="p-3 rounded-lg text-gray-500">חזור</button>
-                        <button id="submit-order-btn" class="bg-green-600 text-white p-3 rounded-lg">שלח הזמנה</button>
+            renderProjectsDropdown() {
+                const projectsDropdown = document.getElementById('order-project');
+                projectsDropdown.innerHTML = '<option value="">בחר פרויקט</option>';
+                this.state.projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.projectName;
+                    option.textContent = project.projectName;
+                    projectsDropdown.appendChild(option);
+                });
+            },
+            fetchDashboardData() {
+                // Fetch and render dashboard data
+                document.getElementById('projects-list').innerHTML = `
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
                     </div>
                 `;
+                document.getElementById('new-orders-list').innerHTML = `
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                    </div>
+                `;
+                document.getElementById('active-containers-list').innerHTML = `
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                    </div>
+                `;
+                
+                // Example of how you would fetch data.
+                // callApi('getDashboardData', { phone: this.state.user['מספר טלפון'] }).then(data => {
+                //    if (data) {
+                //        this.renderDashboard(data);
+                //    }
+                // });
             },
-            
-            attachStep3Events() {
-                 document.getElementById('prev-step-btn').addEventListener('click', () => {
-                    this.state.newOrder.step = 2;
-                    this.renderNewOrderForm();
+            renderDashboard(data) {
+                // This is where you would update the HTML with the fetched data
+                const projectsList = document.getElementById('projects-list');
+                projectsList.innerHTML = '';
+                data.projects.forEach(project => {
+                    projectsList.innerHTML += `<div class="p-4 border rounded-lg bg-gray-50">
+                        <h4 class="font-bold">${project.projectName}</h4>
+                        <p class="text-sm text-gray-500">${project.projectAddress}</p>
+                    </div>`;
                 });
-
-                document.getElementById('submit-order-btn').addEventListener('click', async () => {
-                     const submitBtn = document.getElementById('submit-order-btn');
-                     submitBtn.disabled = true;
-                     submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i> שולח...`;
-                     
-                     const orderPayload = {
-                        clientName: this.state.user['שם לקוח'],
-                        phone: this.state.user['מספר טלפון'],
-                        project: this.state.newOrder.project.name,
-                        address: this.state.newOrder.project.address,
-                        actionType: this.state.newOrder.actionType,
-                        preferredDate: this.state.newOrder.preferredDate,
-                        notes: this.state.newOrder.notes,
-                     };
-                     
-                     const result = await this.api('createOrder', orderPayload);
-                     if (result) {
-                          Swal.fire('נשלח!', `הזמנה ${result.orderId} נוצרה בהצלחה.`, 'success')
-                            .then(() => this.navigateTo('dashboard'));
-                     }
-                     submitBtn.disabled = false;
-                     submitBtn.innerHTML = `שלח הזמנה`;
+                
+                // Repeat for new orders and active containers
+            },
+            fetchMaterials() {
+                // Fetch materials from API and render them
+                // callApi('getMaterials').then(data => {
+                //     if (data) {
+                //         this.state.materials = data;
+                //         this.renderMaterialsGrid();
+                //     }
+                // });
+            },
+            renderMaterialsGrid() {
+                const grid = document.getElementById('materials-grid');
+                grid.innerHTML = '';
+                this.state.materials.forEach(material => {
+                    const materialCard = document.createElement('div');
+                    materialCard.className = 'card p-4 text-center cursor-pointer hover:bg-gray-50';
+                    materialCard.innerHTML = `
+                        <img src="${material['קישור לתמונה']}" alt="${material['שם מוצר']}" class="w-24 h-24 mx-auto mb-2 rounded-lg object-cover">
+                        <h5 class="font-bold text-sm">${material['שם מוצר']}</h5>
+                        <p class="text-xs text-gray-500">${material['מק"ט']}</p>
+                        <input type="number" placeholder="כמות" class="w-full text-center mt-2 input text-sm" data-sku="${material['מק"ט']}">
+                    `;
+                    grid.appendChild(materialCard);
                 });
+            },
+            fetchChatMessages() {
+                // Fetch chat messages and render them
+                // callApi('getChatMessages', { phone: this.state.user['מספר טלפון'] }).then(data => {
+                //     if (data) {
+                //         this.renderChat(data);
+                //     }
+                // });
+            },
+            renderChat(messages) {
+                const chatContainer = document.getElementById('chat-messages');
+                chatContainer.innerHTML = '';
+                messages.forEach(msg => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `p-3 rounded-xl max-w-[75%] ${msg.sender === 'user' ? 'bg-blue-500 text-white self-end' : 'bg-gray-300 text-gray-800 self-start'}`;
+                    messageElement.textContent = msg.text;
+                    chatContainer.appendChild(messageElement);
+                });
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
         };
 
