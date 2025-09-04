@@ -295,19 +295,30 @@
                         url.searchParams.append(key, params[key]);
                     }
                 }
+                
+                console.log(`[API Call] Action: ${action}, Params:`, params);
+
                 try {
                     const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     const data = await response.json();
-                    if (!data.success) throw new Error(data.message);
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'An unknown API error occurred.');
+                    }
+                    console.log(`[API Response] Action: ${action}, Data:`, data.data);
                     return data.data;
                 } catch (error) {
+                    console.error(`[API Error] Action: ${action}, Error:`, error);
                     Swal.fire({
                         icon: 'error',
                         title: 'שגיאה',
-                        text: `שגיאה בתקשורת עם השרת: ${error.message}`,
+                        text: `אירעה שגיאה בפניה לשרת: ${error.message}. בדוק בקונסול לפרטים נוספים.`,
                         confirmButtonText: 'אישור'
                     });
-                    return null;
+                    throw error;
                 }
             },
 
@@ -332,7 +343,11 @@
                 const phone = document.getElementById('phone').value.trim();
                 const password = document.getElementById('password').value.trim();
                 const loginBtn = document.getElementById('login-btn');
+                
+                console.log(`[Login Attempt] Phone: ${phone}, Password: ${password}`);
+
                 if (!phone || password !== 'סבן') {
+                    console.error('[Login Error] Invalid credentials.');
                     return Swal.fire({ icon: 'error', title: 'שגיאה', text: 'מספר טלפון או סיסמה שגויים.' });
                 }
                 loginBtn.disabled = true;
@@ -346,21 +361,23 @@
                         await this.fetchInitialData();
                         this.initializeApp();
                     } else {
+                        console.error('[Login Error] User data not returned from API.');
                         throw new Error('User data not returned');
                     }
                 } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'שגיאה', text: 'ההתחברות נכשלה. נסה שוב.', confirmButtonText: 'אישור' });
+                    Swal.fire({ icon: 'error', title: 'שגיאה', text: `ההתחברות נכשלה. נסה שוב.`, confirmButtonText: 'אישור' });
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = `כניסה למערכת`;
                 }
             },
 
             async fetchInitialData() {
+                console.log('[Fetching Initial Data]');
                  const phone = this.state.user['מספר טלפון'];
                  this.state.data = await this.api('getDashboardData', { phone });
                  
-                 // If the API call fails, provide mock data
                  if (!this.state.data) {
+                    console.warn('[Mock Data Enabled] API call failed, using mock data.');
                     this.state.data = {
                         projects: this.state.mockData.projects,
                         newOrders: [
@@ -383,6 +400,7 @@
             },
             
             initializeApp() {
+                console.log('[App Initialized]');
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('client-name').textContent = this.state.user['שם לקוח'];
@@ -390,6 +408,7 @@
             },
 
             navigateTo(view) {
+                console.log(`[Navigation] Navigating to: ${view}`);
                 this.state.currentView = view;
                 document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
                 const pageId = `${view}-page`;
@@ -403,6 +422,7 @@
             },
 
             renderContent() {
+                console.log(`[Rendering] Rendering content for view: ${this.state.currentView}`);
                 if (this.state.currentView === 'dashboard') {
                     this.renderDashboard();
                 } else if (this.state.currentView === 'orders') {
